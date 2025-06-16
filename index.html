@@ -7,7 +7,29 @@
   <title>Service Coin Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js">
+
 // DAO contract integration
+async function loadVaultStats() {
+  try {
+    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, provider);
+    yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, provider);
+
+    const [vaultBalance, kernelBalance] = await Promise.all([
+      yieldVaultContract.getVaultBalance(),
+      kernelContract.getKernelBalance()
+    ]);
+
+    const vault = ethers.formatUnits(BigInt(vaultBalance), 6);
+    const kernel = ethers.formatUnits(BigInt(kernelBalance), 6);
+
+    document.getElementById('vaultStats').innerHTML =
+      `<p class='text-orange-300'>Vault Balance: $${parseFloat(vault).toFixed(2)}</p>` +
+      `<p class='text-yellow-300'>Kernel Balance: $${parseFloat(kernel).toFixed(2)}</p>`;
+  } catch (e) {
+    console.warn('Failed to load vault/kernel stats', e);
+  }
+}
+
 const kernelAddress = '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1';
 const yieldVaultAddress = '0x44D64E1B9dC5F90b389900Da24B8de631222432C';
 
@@ -28,7 +50,8 @@ async function daoBatchClaim() {
   try {
     if (!currentAddress) return alert("Connect wallet first.");
     kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const tx = await kernelContract.batchClaimYield([currentAddress]);
+    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
+    const tx = await kernelContract.batchClaimYield(investors);
     await tx.wait();
     alert("Batch claim successful.");
   } catch (err) {
@@ -41,7 +64,8 @@ async function daoBatchWithdraw() {
   try {
     if (!currentAddress) return alert("Connect wallet first.");
     kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const tx = await kernelContract.batchWithdraw([currentAddress]);
+    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
+    const tx = await kernelContract.batchWithdraw(investors);
     await tx.wait();
     alert("Batch withdraw successful.");
   } catch (err) {
@@ -87,8 +111,12 @@ async function sweepFeesToTreasury() {
     </div>
 
     <div id="daoTools" class="hidden mt-8 border-t border-orange-400 pt-4">
+  <div id="vaultStats" class="text-sm text-left mb-4"></div>
       <h2 class="text-xl font-semibold text-orange-300 mb-2">DAO Tools</h2>
       <p class="text-sm text-gray-400 mb-4">DAO-only functions appear here (batchClaim, batchWithdraw)</p>
+<div class="mb-4">
+  <textarea id="batchAddresses" placeholder="Enter investor addresses (comma-separated)" class="w-full p-2 text-black rounded mb-2"></textarea>
+</div>
 <div class="space-x-3">
   <button onclick="daoBatchClaim()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded">Batch Claim</button>
   <button onclick="daoBatchWithdraw()" class="bg-red-700 hover:bg-red-800 px-4 py-2 rounded">Batch Withdraw</button>
@@ -142,6 +170,7 @@ async function sweepFeesToTreasury() {
 
       if (currentAddress.toLowerCase() === daoWallet.toLowerCase()) {
         document.getElementById('daoTools').classList.remove('hidden');
+      loadVaultStats();
       }
 
       fetchUserData();
@@ -199,7 +228,29 @@ async function sweepFeesToTreasury() {
       }
     }
   
+
 // DAO contract integration
+async function loadVaultStats() {
+  try {
+    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, provider);
+    yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, provider);
+
+    const [vaultBalance, kernelBalance] = await Promise.all([
+      yieldVaultContract.getVaultBalance(),
+      kernelContract.getKernelBalance()
+    ]);
+
+    const vault = ethers.formatUnits(BigInt(vaultBalance), 6);
+    const kernel = ethers.formatUnits(BigInt(kernelBalance), 6);
+
+    document.getElementById('vaultStats').innerHTML =
+      `<p class='text-orange-300'>Vault Balance: $${parseFloat(vault).toFixed(2)}</p>` +
+      `<p class='text-yellow-300'>Kernel Balance: $${parseFloat(kernel).toFixed(2)}</p>`;
+  } catch (e) {
+    console.warn('Failed to load vault/kernel stats', e);
+  }
+}
+
 const kernelAddress = '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1';
 const yieldVaultAddress = '0x44D64E1B9dC5F90b389900Da24B8de631222432C';
 
@@ -220,7 +271,8 @@ async function daoBatchClaim() {
   try {
     if (!currentAddress) return alert("Connect wallet first.");
     kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const tx = await kernelContract.batchClaimYield([currentAddress]);
+    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
+    const tx = await kernelContract.batchClaimYield(investors);
     await tx.wait();
     alert("Batch claim successful.");
   } catch (err) {
@@ -233,7 +285,8 @@ async function daoBatchWithdraw() {
   try {
     if (!currentAddress) return alert("Connect wallet first.");
     kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const tx = await kernelContract.batchWithdraw([currentAddress]);
+    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
+    const tx = await kernelContract.batchWithdraw(investors);
     await tx.wait();
     alert("Batch withdraw successful.");
   } catch (err) {
