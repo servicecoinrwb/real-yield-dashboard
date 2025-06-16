@@ -72,12 +72,46 @@
         </div>
 
         <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">DAO Actions</h3>
+            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Solver & Loan Management</h3>
+            <!-- Whitelist Management -->
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Manage Solver Whitelist:</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="solverAddress" type="text" placeholder="Solver Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="addSolver()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Add</button>
+                    <button onclick="removeSolver()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-semibold">Remove</button>
+                    <button onclick="checkSolverStatus()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md font-semibold">Check</button>
+                </div>
+            </div>
+            <!-- Disburse Loan -->
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Disburse Loan to Solver (USDC):</label>
+                <div class="flex flex-col gap-2">
+                     <input id="disburseSolverAddress" type="text" placeholder="Whitelisted Solver Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                     <input id="disburseAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                     <button onclick="disburseLoan()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Disburse Loan</button>
+                </div>
+                 <p class="text-xs text-gray-400 mt-1">Sends funds from the Kernel to a whitelisted solver.</p>
+            </div>
+             <!-- Repay Loan -->
+             <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Repay Loan to Kernel (USDC):</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="repayAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                    <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay Loan</button>
+                </div>
+                 <p class="text-xs text-gray-400 mt-1">For solvers (bots/contractors) to repay the principal loan amount.</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Capital & Fee Management</h3>
             <div class="mb-4">
                 <label class="block mb-1 text-sm font-semibold">Fund Kernel (USDC):</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve Fund</button>
+                    <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
                     <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
                 </div>
                  <p class="text-xs text-gray-400 mt-1">This action deposits capital directly to the Kernel. First approve, then fund.</p>
@@ -89,19 +123,6 @@
                     <button onclick="sweepFees()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Sweep Fees</button>
                 </div>
                 <p class="text-xs text-gray-400 mt-1">Leave amount blank to sweep the full balance.</p>
-            </div>
-        </div>
-
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Solver Actions</h3>
-             <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Repay Loan to Kernel (USDC):</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="repayAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve Repayment</button>
-                    <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay Loan</button>
-                </div>
-                 <p class="text-xs text-gray-400 mt-1">For solvers (bots/contractors) to repay the principal loan amount.</p>
             </div>
         </div>
         
@@ -153,7 +174,7 @@
             currentAddress = await signer.getAddress();
             
             usdcContract = new ethers.Contract(addresses.nativeUsdc, abis.usdc, signer);
-            usdcEContract = new ethers.Contract(addresses.bridgedUsdc, abis.usdc, signer); // Contract for USDC.e
+            usdcEContract = new ethers.Contract(addresses.bridgedUsdc, abis.usdc, signer); 
             investorVaultContract = new ethers.Contract(addresses.investorVault, abis.investorVault, signer);
             yieldVaultContract = new ethers.Contract(addresses.yieldVault, abis.yieldVault, signer);
             kernelContract = new ethers.Contract(addresses.kernel, abis.kernel, signer);
@@ -179,13 +200,11 @@
     // --- Data Fetching ---
     async function fetchUserData() {
         try {
-            // Fetch Native and Bridged USDC balances
             const nativeBalance = await usdcContract.balanceOf(currentAddress);
             const bridgedBalance = await usdcEContract.balanceOf(currentAddress);
             document.getElementById('nativeUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(nativeBalance, 6)).toFixed(4)} USDC`;
             document.getElementById('bridgedUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(bridgedBalance, 6)).toFixed(4)} USDC.e`;
 
-            // Fetch user info from the investor vault
             const info = await investorVaultContract.getInvestorInfo(currentAddress);
             shareAmount = info.share;
             const claimable = ethers.formatUnits(info.claimable, 6);
@@ -193,10 +212,6 @@
             document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(4)}`;
         } catch (err) {
             console.error("Error fetching user data:", err);
-            document.getElementById('nativeUsdcBalance').textContent = "Error";
-            document.getElementById('bridgedUsdcBalance').textContent = "Error";
-            document.getElementById('userShares').textContent = "Error";
-            document.getElementById('claimableYield').textContent = "Error";
         }
     }
 
@@ -216,13 +231,11 @@
             document.getElementById('investorVaultTotalDeposits').textContent = `$${parseFloat(ethers.formatUnits(investorVaultTotals.totalUSDC, 6)).toFixed(2)}`;
         } catch (err) {
             console.error('Error fetching DAO data:', err);
-            showModal("DAO Data Error", "Could not fetch all DAO statistics.");
         }
     }
 
     // --- User Actions ---
     async function approveDeposit() {
-        // We approve the native USDC contract for the investor vault
         await handleApproval(document.getElementById('depositAmount').value, addresses.investorVault);
     }
     async function deposit() {
@@ -241,11 +254,9 @@
 
     // --- DAO & Solver Actions ---
     async function approveFundKernel() {
-        // This function approves the KERNEL contract to spend USDC
         await handleApproval(document.getElementById('kernelAmount').value, addresses.kernel);
     }
     async function fundKernel() {
-        // This function calls depositCapital on the KERNEL contract
         await handleTransaction(kernelContract, 'depositCapital', document.getElementById('kernelAmount').value, "Fund Kernel");
     }
     async function approveRepayLoan() {
@@ -261,6 +272,35 @@
         } else {
             await handleTransaction(yieldVaultContract, 'sweepFullBalanceToTreasury', null, "Sweep Full Balance");
         }
+    }
+    async function addSolver() {
+        const solverAddress = document.getElementById('solverAddress').value;
+        if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
+        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, true], "Add Solver", false);
+    }
+    async function removeSolver() {
+        const solverAddress = document.getElementById('solverAddress').value;
+        if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
+        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, false], "Remove Solver", false);
+    }
+    async function checkSolverStatus() {
+        const solverAddress = document.getElementById('solverAddress').value;
+        if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
+        try {
+            const isWhitelisted = await kernelContract.whitelistedSolvers(solverAddress);
+            showModal("Solver Status", `Address ${solverAddress} is ${isWhitelisted ? 'whitelisted' : 'NOT whitelisted'}.`);
+        } catch (e) {
+            console.error("Failed to check solver status:", e);
+            showModal("Error", "Could not check solver status.");
+        }
+    }
+    async function disburseLoan() {
+        const solverAddress = document.getElementById('disburseSolverAddress').value;
+        const amount = document.getElementById('disburseAmount').value;
+        if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid solver address.");
+        if (!amount || isNaN(amount) || Number(amount) <= 0) return showModal("Input Error", "Please enter a valid amount to disburse.");
+        const amountInUnits = ethers.parseUnits(amount, 6);
+        await handleTransaction(kernelContract, 'disburseLoan', [solverAddress, amountInUnits], "Disburse Loan", false);
     }
     async function daoBatchClaim() {
         const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(Boolean);
@@ -294,7 +334,6 @@
             kernelContract.on('*', (event) => addLogEntry(event, 'Kernel'));
         } catch (e) {
             console.error("Fatal error setting up event listeners:", e);
-            addLogEntry({ fragment: { name: "Error" }, args: { message: "Could not connect to event stream." } }, "System");
         }
     }
 
@@ -306,7 +345,7 @@
         let argsString = "No arguments";
         if (event.args && Object.keys(event.args).length > 0) {
             argsString = Object.keys(event.args)
-                .filter(key => isNaN(parseInt(key))) // Filter out numeric keys from array-like objects
+                .filter(key => isNaN(parseInt(key))) 
                 .map(key => {
                     let value = event.args[key];
                     if (typeof value === 'bigint') {
@@ -339,7 +378,6 @@
         if (!amount || isNaN(amount) || Number(amount) <= 0) return showModal("Input Error", "Please enter a valid amount to approve.");
         showModal("Processing", "Requesting approval from your wallet...");
         try {
-            // We specifically approve the NATIVE USDC contract
             const tx = await usdcContract.approve(spender, ethers.parseUnits(amount, 6));
             await tx.wait();
             showModal("Success", `Successfully approved ${amount} USDC.`);
@@ -352,10 +390,14 @@
     async function handleTransaction(contractInstance, method, value, name, isUSDC = true) {
         showModal("Processing", `Sending ${name} transaction... Please confirm in your wallet.`);
         try {
-            const args = [];
+            let args = [];
             if (value !== null) {
-                const finalValue = isUSDC ? ethers.parseUnits(value, 6) : value;
-                args.push(finalValue);
+                if (Array.isArray(value)) {
+                    args = value;
+                } else {
+                    const finalValue = isUSDC ? ethers.parseUnits(value, 6) : value;
+                    args.push(finalValue);
+                }
             }
             const tx = await contractInstance[method](...args);
             await tx.wait();
@@ -401,6 +443,10 @@
     window.approveRepayLoan = approveRepayLoan;
     window.repayLoan = repayLoan;
     window.sweepFees = sweepFees;
+    window.addSolver = addSolver;
+    window.removeSolver = removeSolver;
+    window.checkSolverStatus = checkSolverStatus;
+    window.disburseLoan = disburseLoan;
     window.daoBatchClaim = daoBatchClaim;
     window.daoBatchWithdraw = daoBatchWithdraw;
 
