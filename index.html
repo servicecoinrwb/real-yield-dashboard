@@ -3,68 +3,138 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Service Coin Real Yield Dashboard</title>
+  <title>Service Coin Dashboard</title>
 
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-  <!-- React + ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-  <!-- Wagmi + Viem (latest) -->
-  <script src="https://unpkg.com/viem@latest/dist/viem.umd.js"></script>
-  <script src="https://unpkg.com/wagmi@latest/dist/wagmi.umd.js"></script>
-
-  <!-- WalletConnect modal (optional) -->
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <!-- Ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 </head>
 <body class="bg-black text-white font-sans">
-  <div id="root" class="p-6 max-w-3xl mx-auto"></div>
+  <div class="max-w-2xl mx-auto p-6 text-center">
+    <h1 class="text-3xl font-bold text-orange-400 mb-4">Service Coin Real Yield Dashboard</h1>
 
-  <script type="text/javascript">
-    const { useState, useEffect } = React;
-    const { createConfig, WagmiProvider, useAccount, useConnect, useDisconnect, configureChains, mainnet } = wagmi;
-    const { publicProvider } = wagmi.providers;
+    <div id="walletStatus" class="mb-4">
+      <button onclick="connectWallet()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded">
+        Connect Wallet
+      </button>
+    </div>
 
-    const config = wagmi.createConfig({
-      autoConnect: true,
-      publicClient: wagmi.getPublicClient({ chainId: 42161 }), // Arbitrum One
-    });
+    <div id="userInfo" class="hidden space-y-3">
+      <p>Wallet: <span id="walletAddress"></span></p>
+      <p>Claimable Yield: <span id="claimableYield">...</span></p>
+      <p>Shares: <span id="userShares">...</span></p>
+      <div class="flex justify-center gap-3 mt-3">
+        <button onclick="claimYield()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Claim</button>
+        <button onclick="compoundYield()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded">Compound</button>
+        <button onclick="withdraw()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Withdraw</button>
+      </div>
+    </div>
 
-    function Dashboard() {
-      const { address, isConnected } = wagmi.useAccount();
-      const { connect, connectors } = wagmi.useConnect();
-      const { disconnect } = wagmi.useDisconnect();
+    <div id="daoTools" class="hidden mt-8 border-t border-orange-400 pt-4">
+      <h2 class="text-xl font-semibold text-orange-300 mb-2">DAO Tools</h2>
+      <p class="text-sm text-gray-400">DAO-only functions appear here (e.g. batchClaim, batchWithdraw)</p>
+      <!-- Add DAO-only buttons here later -->
+    </div>
+  </div>
 
-      const connectWallet = () => {
-        connect({ connector: connectors[0] });
-      };
+  <script>
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    let signer;
+    let contract;
 
-      return React.createElement("div", {},
-        React.createElement("h1", { className: "text-3xl font-bold text-orange-400 mb-4" }, "Service Coin Real Yield Dashboard"),
-        isConnected
-          ? React.createElement("div", {},
-              React.createElement("p", { className: "mb-2" }, "Connected wallet: " + address),
-              React.createElement("button", {
-                className: "bg-red-500 px-4 py-2 rounded",
-                onClick: disconnect
-              }, "Disconnect")
-            )
-          : React.createElement("button", {
-              className: "bg-orange-500 px-4 py-2 rounded",
-              onClick: connectWallet
-            }, "Connect Wallet")
-      );
+    const investorVaultAddress = '0x1a51f1966d35661573908DC913307076d937aa90';
+    const daoWallet = '0xcfe077e6f7554B1724546E02624a0832D1f4557a';
+
+    const abi = [
+      {
+        "inputs": [{"internalType":"address","name":"investor","type":"address"}],
+        "name":"getInvestorInfo",
+        "outputs":[
+          {"internalType":"uint256","name":"share","type":"uint256"},
+          {"internalType":"uint256","name":"claimable","type":"uint256"},
+          {"internalType":"uint256","name":"claimed","type":"uint256"},
+          {"internalType":"uint256","name":"unlockTime","type":"uint256"}
+        ],
+        "stateMutability":"view",
+        "type":"function"
+      },
+      { "name":"claimYield","type":"function","inputs":[],"outputs":[],"stateMutability":"nonpayable" },
+      { "name":"compoundYield","type":"function","inputs":[],"outputs":[],"stateMutability":"nonpayable" },
+      {
+        "name":"withdraw",
+        "type":"function",
+        "inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}],
+        "outputs":[],"stateMutability":"nonpayable"
+      },
+    ];
+
+    let currentAddress;
+    let shareAmount = 0;
+
+    async function connectWallet() {
+      if (!window.ethereum) return alert("Please install MetaMask.");
+
+      signer = await provider.getSigner();
+      currentAddress = await signer.getAddress();
+      contract = new ethers.Contract(investorVaultAddress, abi, signer);
+
+      document.getElementById('walletStatus').innerHTML =
+        '<p class="text-green-400">Connected: ' + currentAddress + '</p>';
+      document.getElementById('walletAddress').textContent = currentAddress;
+      document.getElementById('userInfo').classList.remove('hidden');
+
+      if (currentAddress.toLowerCase() === daoWallet.toLowerCase()) {
+        document.getElementById('daoTools').classList.remove('hidden');
+      }
+
+      fetchUserData();
     }
 
-    ReactDOM.render(
-      React.createElement(wagmi.WagmiProvider, { config },
-        React.createElement(Dashboard)
-      ),
-      document.getElementById('root')
-    );
+    async function fetchUserData() {
+      const info = await contract.getInvestorInfo(currentAddress);
+      shareAmount = info.share;
+
+      document.getElementById('userShares').textContent = shareAmount;
+      document.getElementById('claimableYield').textContent = "$" + (info.claimable / 1e6).toFixed(2);
+    }
+
+    async function claimYield() {
+      try {
+        const tx = await contract.claimYield();
+        await tx.wait();
+        alert("Yield claimed!");
+        fetchUserData();
+      } catch (err) {
+        console.error(err);
+        alert("Claim failed.");
+      }
+    }
+
+    async function compoundYield() {
+      try {
+        const tx = await contract.compoundYield();
+        await tx.wait();
+        alert("Yield compounded!");
+        fetchUserData();
+      } catch (err) {
+        console.error(err);
+        alert("Compound failed.");
+      }
+    }
+
+    async function withdraw() {
+      try {
+        const tx = await contract.withdraw(shareAmount);
+        await tx.wait();
+        alert("Withdraw complete!");
+        fetchUserData();
+      } catch (err) {
+        console.error(err);
+        alert("Withdraw failed.");
+      }
+    }
   </script>
 </body>
 </html>
-
