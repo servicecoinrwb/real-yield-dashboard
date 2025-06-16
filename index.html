@@ -94,14 +94,7 @@
                     <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
                     <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
                 </div>
-            </div>
-             <!-- Fund Yield -->
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Add Yield to Vault (USDC):</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="fundAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="fundVault()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Add Yield</button>
-                </div>
+                 <p class="text-xs text-gray-400 mt-1">Sends USDC from this wallet to the Kernel contract.</p>
             </div>
         </div>
         
@@ -137,7 +130,6 @@
     const daoWallet = '0xcfe077e6f7554B1724546E02624a0832D1f4557a';
 
     // --- ABIs (Application Binary Interfaces) ---
-    // Combined ABI for the main Vault Contract
     const vaultAbi = [{"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesMinted","type":"uint256"}],"name":"Deposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldKernel","type":"address"},{"indexed":true,"internalType":"address","name":"newKernel","type":"address"}],"name":"KernelUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesBurned","type":"uint256"}],"name":"Withdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newShares","type":"uint256"}],"name":"YieldCompounded","type":"event"},{"inputs":[],"name":"LOCKUP_PERIOD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchClaimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchWithdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"claimableYield","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"compoundYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"fundKernel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"getInvestorInfo","outputs":[{"internalType":"uint256","name":"share","type":"uint256"},{"internalType":"uint256","name":"claimable","type":"uint256"},{"internalType":"uint256","name":"claimed","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVaultTotals","outputs":[{"internalType":"uint256","name":"totalUSDC","type":"uint256"},{"internalType":"uint256","name":"totalSharesMinted","type":"uint256"},{"internalType":"uint256","name":"totalYield","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"kernel","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"receiveYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}];
     const usdcAbi = [ { "constant":false, "inputs":[ { "name":"_spender", "type":"address" }, { "name":"_value", "type":"uint256" } ], "name":"approve", "outputs":[ { "name":"", "type":"bool" } ], "payable":false, "stateMutability":"nonpayable", "type":"function" }, { "constant":true, "inputs":[], "name":"totalSupply", "outputs":[ { "name":"", "type":"uint256" } ], "payable":false, "stateMutability":"view", "type":"function" }, { "constant":true, "inputs":[ { "name":"_owner", "type":"address" } ], "name":"balanceOf", "outputs":[ { "name":"balance", "type":"uint256" } ], "payable":false, "stateMutability":"view", "type":"function" }, { "constant":true, "inputs":[ { "name":"_owner", "type":"address" }, { "name":"_spender", "type":"address" } ], "name":"allowance", "outputs":[ { "name":"", "type":"uint256" } ], "payable":false, "stateMutability":"view", "type":"function" } ];
     const minimalKernelAbi = [{ "inputs": [], "name": "getKernelBalance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }];
@@ -235,10 +227,6 @@
     }
 
     // --- DAO Actions ---
-    async function fundVault() {
-        await handleTransaction('receiveYield', document.getElementById('fundAmount').value, "Add Yield");
-    }
-
     async function fundKernel() {
         await handleTransaction('fundKernel', document.getElementById('kernelAmount').value, "Fund Kernel");
     }
@@ -256,16 +244,26 @@
     }
     
     // --- Event Handling & Logging ---
-    function setupEventListeners() {
+    async function setupEventListeners() {
         const eventLog = document.getElementById('eventLog');
-        if (eventLog.dataset.listening) return; // Prevent multiple listeners
+        if (eventLog.dataset.listening) {
+            try {
+                await contract.removeAllListeners();
+            } catch (e) {
+                console.warn("Could not remove all listeners, perhaps the connection was already closed.", e);
+            }
+        }
         eventLog.dataset.listening = 'true';
-        
         eventLog.innerHTML = '<li>Listening for contract events...</li>';
 
-        contract.on('*', (event) => {
-            addLogEntry(event);
-        });
+        try {
+            contract.on('*', (event) => {
+                addLogEntry(event);
+            });
+        } catch(e) {
+             console.error("Could not set up event listener:", e);
+             addLogEntry({ fragment: { name: "Error" }, args: { message: "Could not connect to event stream."}});
+        }
     }
 
     function addLogEntry(event) {
@@ -280,7 +278,12 @@
                  let value = event.args[key];
                  if(typeof value === 'bigint') {
                     try {
-                        value = ethers.formatUnits(value, 6) + ' USDC';
+                        // Attempt to format known currency values, fallback for others
+                        if (event.fragment.name.includes("Yield") || event.fragment.name.includes("Deposit")) {
+                             value = ethers.formatUnits(value, 6) + ' USDC';
+                        } else {
+                             value = value.toString();
+                        }
                     } catch(e) { value = value.toString(); }
                  }
                  args.push(`${key}: <span class="text-green-300">${value}</span>`);
@@ -308,12 +311,12 @@
             showModal("Success", `Successfully approved ${amount} USDC for the contract.`);
         } catch (error) {
             console.error("Approval failed:", error);
-            showModal("Error", `Approval failed: ${error?.data?.message || error.message}`);
+            showModal("Error", `Approval failed: ${error?.reason || error.message}`);
         }
     }
 
     async function handleTransaction(method, value, name, isUSDC = true) {
-        showModal("Processing", `Sending ${name} transaction...`);
+        showModal("Processing", `Sending ${name} transaction... Please confirm in your wallet.`);
         try {
             let tx;
             if (value !== null) {
@@ -334,24 +337,22 @@
 
         } catch (error) {
             console.error(`${name} failed:`, error);
-            showModal("Error", `${name} failed: ${error?.reason || error?.data?.message || error.message}`);
+            showModal("Error", `${name} failed: ${error?.reason || error.message}`);
         }
     }
     
     // --- UI Utility ---
     function showModal(title, message) {
-        // Remove existing modal if any
         const existingModal = document.getElementById('alertModal');
         if (existingModal) existingModal.remove();
 
-        // Create modal elements
         const modal = document.createElement('div');
         modal.id = 'alertModal';
-        modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4';
         modal.innerHTML = `
-            <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-11/12 max-w-sm text-center border-2 border-orange-500">
+            <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm text-center border-2 border-orange-500">
                 <h3 class="text-xl font-bold text-orange-400 mb-4">${title}</h3>
-                <p class="text-gray-200 mb-6">${message}</p>
+                <p class="text-gray-200 mb-6 break-words">${message}</p>
                 <button onclick="document.getElementById('alertModal').remove()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold">Close</button>
             </div>
         `;
@@ -366,7 +367,6 @@
     window.compoundYield = compoundYield;
     window.withdraw = withdraw;
     window.fundKernel = fundKernel;
-    window.fundVault = fundVault;
     window.daoBatchClaim = daoBatchClaim;
     window.daoBatchWithdraw = daoBatchWithdraw;
 
