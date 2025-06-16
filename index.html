@@ -76,8 +76,10 @@
                 <label class="block mb-1 text-sm font-semibold">Fund Kernel via Investor Vault (USDC):</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve Fund</button>
                     <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
                 </div>
+                 <p class="text-xs text-gray-400 mt-1">First approve, then fund.</p>
             </div>
             <div class="mb-4">
                 <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
@@ -222,6 +224,9 @@
     }
 
     // --- DAO Actions ---
+    async function approveFundKernel() {
+        await handleApproval(document.getElementById('kernelAmount').value, addresses.investorVault);
+    }
     async function fundKernel() {
         await handleTransaction(investorVaultContract, 'fundKernel', document.getElementById('kernelAmount').value, "Fund Kernel");
     }
@@ -261,10 +266,7 @@
 
         try {
             investorVaultContract.on('*', (event) => addLogEntry(event, 'InvestorVault'));
-            yieldVaultContract.on('*', 'FeesSweptToTreasury', (treasury, amount) => {
-                const fakeEvent = { fragment: { name: 'FeesSweptToTreasury' }, args: { treasury, amount } };
-                addLogEntry(fakeEvent, 'YieldVault');
-            });
+            yieldVaultContract.on('*', (event) => addLogEntry(event, 'YieldVault'));
             kernelContract.on('*', (event) => addLogEntry(event, 'Kernel'));
         } catch (e) {
             console.error("Fatal error setting up event listeners:", e);
@@ -370,6 +372,7 @@
     window.claimYield = claimYield;
     window.compoundYield = compoundYield;
     window.withdraw = withdraw;
+    window.approveFundKernel = approveFundKernel;
     window.fundKernel = fundKernel;
     window.sweepFees = sweepFees;
     window.daoBatchClaim = daoBatchClaim;
@@ -378,4 +381,4 @@
 </script>
 
 </body>
-</ht
+</html>
