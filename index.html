@@ -16,11 +16,12 @@ async function fetchVaultTotals() {
   yieldVaultContract.totalFeesAccumulatedInVault()
 ]);
     const usdc = ethers.formatUnits(BigInt(vaultBalance), 6);
-    const totalYield = null;
+    const totalYield = ethers.formatUnits(BigInt(totalFees), 6);
     const shares = 'N/A';
 
     document.getElementById('vaultTotalsContent').innerHTML = 
-      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` + '<p>(fee stats disabled)</p>';
+      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` +
+      `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
   } catch (err) {
     console.error('Vault totals error:', err);
     document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
@@ -176,13 +177,37 @@ async function fundKernel() {
     const amt6 = ethers.parseUnits(amount, 6);
     const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
     
-    const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-    const allowance = await usdcContract.allowance(currentAddress, kernelAddress);
-    if (allowance < amt6) {
-      alert("You must approve USDC before funding Kernel.");
-      return;
+    try {
+      const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
+      const allowance = await usdcContract.allowance(currentAddress, kernelAddress);
+      if (allowance < amt6) {
+        alert("You must approve USDC before funding Kernel.");
+        return;
+      }
+
+      console.log("Preparing to fund kernel with:", amt6.toString());
+      const gasEstimate = await contract.fundKernel.estimateGas(amt6).catch(e => {
+        console.warn("estimateGas failed", e);
+        return null;
+      });
+      const callStaticCheck = await contract.fundKernel.callStatic(amt6).catch(e => {
+        console.warn("callStatic check failed", e);
+        return null;
+      });
+
+      if (!gasEstimate || !callStaticCheck) {
+        alert("Gas estimate or callStatic failed. Check permissions or input.");
+        return;
+      }
+
+      const tx = await contract.fundKernel(amt6);
+      console.log("TX sent:", tx.hash);
+      await tx.wait();
+      alert("Kernel funded");
+    } catch (e) {
+      console.error("Final fundKernel TX failed:", e);
+      alert("Funding failed: " + e.message);
     }
-    const tx = await contract.fundKernel(amt6);
     
     await tx.wait();
     alert("Kernel funded");
@@ -392,11 +417,12 @@ async function fetchVaultTotals() {
   yieldVaultContract.totalFeesAccumulatedInVault()
 ]);
     const usdc = ethers.formatUnits(BigInt(vaultBalance), 6);
-    const totalYield = null;
+    const totalYield = ethers.formatUnits(BigInt(totalFees), 6);
     const shares = 'N/A';
 
     document.getElementById('vaultTotalsContent').innerHTML = 
-      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` + '<p>(fee stats disabled)</p>';
+      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` +
+      `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
   } catch (err) {
     console.error('Vault totals error:', err);
     document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
@@ -552,13 +578,37 @@ async function fundKernel() {
     const amt6 = ethers.parseUnits(amount, 6);
     const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
     
-    const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-    const allowance = await usdcContract.allowance(currentAddress, kernelAddress);
-    if (allowance < amt6) {
-      alert("You must approve USDC before funding Kernel.");
-      return;
+    try {
+      const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
+      const allowance = await usdcContract.allowance(currentAddress, kernelAddress);
+      if (allowance < amt6) {
+        alert("You must approve USDC before funding Kernel.");
+        return;
+      }
+
+      console.log("Preparing to fund kernel with:", amt6.toString());
+      const gasEstimate = await contract.fundKernel.estimateGas(amt6).catch(e => {
+        console.warn("estimateGas failed", e);
+        return null;
+      });
+      const callStaticCheck = await contract.fundKernel.callStatic(amt6).catch(e => {
+        console.warn("callStatic check failed", e);
+        return null;
+      });
+
+      if (!gasEstimate || !callStaticCheck) {
+        alert("Gas estimate or callStatic failed. Check permissions or input.");
+        return;
+      }
+
+      const tx = await contract.fundKernel(amt6);
+      console.log("TX sent:", tx.hash);
+      await tx.wait();
+      alert("Kernel funded");
+    } catch (e) {
+      console.error("Final fundKernel TX failed:", e);
+      alert("Funding failed: " + e.message);
     }
-    const tx = await contract.fundKernel(amt6);
     
     await tx.wait();
     alert("Kernel funded");
