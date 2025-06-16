@@ -3,14 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Service Coin Dashboard</title>
+  <title>Service Coin Real Yield Dashboard</title>
+
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Wagmi + Viem (latest) -->
+  <script src="https://unpkg.com/viem@latest/dist/viem.umd.js"></script>
+  <script src="https://unpkg.com/wagmi@latest/dist/wagmi.umd.js"></script>
+
+  <!-- WalletConnect modal (optional) -->
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 </head>
 <body class="bg-black text-white font-sans">
-  <div class="max-w-3xl mx-auto p-6 text-center">
-    <h1 class="text-3xl font-bold text-orange-400 mb-4">Service Coin Real Yield Dashboard</h1>
-    <p class="text-lg">Coming soon: USDC yield, staking, DAO tools, and more.</p>
-    <p class="mt-4 text-sm text-gray-400">This is a static placeholder for GitHub Pages. Visit <a class="underline text-orange-300" href="https://servicerevenue.net" target="_blank">servicerevenue.net</a> for updates.</p>
-  </div>
+  <div id="root" class="p-6 max-w-3xl mx-auto"></div>
+
+  <script type="text/javascript">
+    const { useState, useEffect } = React;
+    const { createConfig, WagmiProvider, useAccount, useConnect, useDisconnect, configureChains, mainnet } = wagmi;
+    const { publicProvider } = wagmi.providers;
+
+    const config = wagmi.createConfig({
+      autoConnect: true,
+      publicClient: wagmi.getPublicClient({ chainId: 42161 }), // Arbitrum One
+    });
+
+    function Dashboard() {
+      const { address, isConnected } = wagmi.useAccount();
+      const { connect, connectors } = wagmi.useConnect();
+      const { disconnect } = wagmi.useDisconnect();
+
+      const connectWallet = () => {
+        connect({ connector: connectors[0] });
+      };
+
+      return React.createElement("div", {},
+        React.createElement("h1", { className: "text-3xl font-bold text-orange-400 mb-4" }, "Service Coin Real Yield Dashboard"),
+        isConnected
+          ? React.createElement("div", {},
+              React.createElement("p", { className: "mb-2" }, "Connected wallet: " + address),
+              React.createElement("button", {
+                className: "bg-red-500 px-4 py-2 rounded",
+                onClick: disconnect
+              }, "Disconnect")
+            )
+          : React.createElement("button", {
+              className: "bg-orange-500 px-4 py-2 rounded",
+              onClick: connectWallet
+            }, "Connect Wallet")
+      );
+    }
+
+    ReactDOM.render(
+      React.createElement(wagmi.WagmiProvider, { config },
+        React.createElement(Dashboard)
+      ),
+      document.getElementById('root')
+    );
+  </script>
 </body>
 </html>
+
