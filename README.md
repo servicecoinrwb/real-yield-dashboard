@@ -1,10 +1,9 @@
-Service Kernel Framework: Documentation
-🧩 1. Overview
+🧩 Service Kernel Framework: Documentation
 The Service Kernel Framework is a modular, DAO-controlled system built on Arbitrum for deploying capital and routing yield. It provides a robust architecture for DAOs to fund automated strategies (bots) or real-world entities (like contractors or businesses) and to collect and distribute the resulting profits in a secure and programmable way.
 
 The framework is designed to bridge the gap between DeFi capital and real-world utility, enabling use cases like on-chain invoicing, seasonal working capital loans, and automated yield generation without the need for traditional overcollateralization.
 
-🔧 2. Core Concepts & Contracts
+🔧 Core Concepts & Contracts
 The framework consists of three primary smart contracts and one key role: the Solver.
 
 Contracts
@@ -28,9 +27,9 @@ Functionality:
 
 Maintains a whitelist of approved "Solver" addresses.
 
-Disburses loans (capital) from its balance to whitelisted solvers.
+Disburses loans (capital) from its balance to whitelisted solvers via disburseLoan.
 
-Records loan repayments from solvers.
+Records loan repayments from solvers via recordLoanPrincipalRepayment.
 
 Forwards any profits (fees/interest) to the YieldVault.
 
@@ -57,27 +56,31 @@ The wallet address of a real-world contractor receiving a working capital loan.
 
 Any other agent tasked with using the capital to generate a return.
 
-🔄 3. How It Works: A Step-by-Step Walkthrough
+🔄 How It Works: A Step-by-Step Walkthrough
 Here is the complete lifecycle of capital within the framework, from investment to profit distribution.
 
-Step 1: Capital is Deposited
+Capital is Deposited
+
 Action: An external Investor wants to participate. They connect to the system and deposit 10,000 USDC into the InvestorVault.
 
-Result: The InvestorVault mints 10,000 shares and assigns them to the Investor's wallet. The vault now holds 10,000 USDC.
+Result: The InvestorVault mints shares and assigns them to the Investor's wallet. The vault now holds 10,000 USDC.
 
-Step 2: DAO Funds the Kernel
+DAO Funds the Kernel
+
 Action: The DAO decides to put the investors' capital to work. The DAO owner calls the fundKernel function on the InvestorVault.
 
 Result: The 10,000 USDC is transferred from the InvestorVault to the KernelSmartAccount. The Kernel is now capitalized and ready to deploy funds.
 
-Step 3: DAO Whitelists and Disburses a Loan to a Solver
+DAO Whitelists and Disburses a Loan to a Solver
+
 Action A (Whitelist): The DAO identifies a trusted contractor who needs a $5,000 loan. The DAO owner calls setSolverAddress on the KernelSmartAccount to add the contractor's wallet address to the whitelist.
 
 Action B (Disburse): The DAO owner then calls disburseLoan, specifying the contractor's address and the 5,000 USDC amount.
 
 Result: The KernelSmartAccount sends 5,000 USDC to the contractor's wallet. Its internal balance is now 5,000 USDC, and it has a record of the 5,000 USDC loan.
 
-Step 4: Solver Repays the Loan with Interest
+Solver Repays the Loan with Interest
+
 Action: The contractor completes their work and is ready to repay the loan plus a $500 fee.
 
 The contractor first calls approve on the USDC contract, giving the KernelSmartAccount permission to pull 5,500 USDC from their wallet.
@@ -92,7 +95,8 @@ It recognizes the 5,000 as the principal repayment and marks the loan as paid.
 
 It forwards the 500 profit to the YieldVault.
 
-Step 5: DAO Sweeps Fees and Investors Claim Yield
+DAO Sweeps Fees and Investors Claim Yield
+
 Action A (DAO): The DAO owner sees that the YieldVault now holds $500. They call sweepFullBalanceToTreasury.
 
 Result A: The 500 USDC is transferred from the YieldVault to the main DAO treasury.
