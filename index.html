@@ -155,8 +155,8 @@ async function sweepFeesToTreasury() {
         console.log("Investor Info:", info);
 
         document.getElementById('userShares').textContent = shareAmount;
-        const claimable = ethers.formatUnits(info.claimable.toString(), 6);
-        document.getElementById('claimableYield').textContent = "$" + Number(claimable).toFixed(2);
+        const claimable = ethers.formatUnits(BigInt(info.claimable), 6);
+        document.getElementById('claimableYield').textContent = "$" + parseFloat(claimable).toFixed(2);
       } catch (err) {
         console.error("Error fetching investor info:", err);
         document.getElementById('claimableYield').textContent = "Error";
