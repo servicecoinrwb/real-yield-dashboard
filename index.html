@@ -208,13 +208,8 @@ async function fundKernel() {
         console.warn("estimateGas failed", e);
         return null;
       });
-      const callStaticCheck = await contract.fundKernel.callStatic(amt6).catch(e => {
-        console.warn("callStatic check failed", e);
-        return null;
-      });
-
-      if (!gasEstimate || !callStaticCheck) {
-        alert("Gas estimate or callStatic failed. Check permissions or input.");
+      if (!gasEstimate) {
+        alert("Gas estimate failed. Check input or permissions.");
         return;
       }
 
@@ -627,13 +622,8 @@ async function fundKernel() {
         console.warn("estimateGas failed", e);
         return null;
       });
-      const callStaticCheck = await contract.fundKernel.callStatic(amt6).catch(e => {
-        console.warn("callStatic check failed", e);
-        return null;
-      });
-
-      if (!gasEstimate || !callStaticCheck) {
-        alert("Gas estimate or callStatic failed. Check permissions or input.");
+      if (!gasEstimate) {
+        alert("Gas estimate failed. Check input or permissions.");
         return;
       }
 
