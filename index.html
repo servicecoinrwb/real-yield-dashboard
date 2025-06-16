@@ -32,7 +32,13 @@ async function fundVault() {
   try {
     const amount = document.getElementById('fundAmount').value;
     if (!amount || isNaN(amount)) return alert('Enter a valid number');
+    
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      alert("Please enter a valid amount in USDC.");
+      return;
+    }
     const amt6 = ethers.parseUnits(amount, 6);
+    
     const tx = await yieldVaultContract.receiveYield(amt6);
     await tx.wait();
     alert('Vault funded!');
@@ -161,7 +167,13 @@ async function approveKernel() {
     const amount = document.getElementById('kernelAmount').value;
     if (!amount) return alert("Enter amount");
     const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
+    
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      alert("Please enter a valid amount in USDC.");
+      return;
+    }
     const amt6 = ethers.parseUnits(amount, 6);
+    
     const tx = await usdcContract.approve(kernelAddress, amt6);
     await tx.wait();
     alert("USDC approved for Kernel");
@@ -174,7 +186,13 @@ async function approveKernel() {
 async function fundKernel() {
   try {
     const amount = document.getElementById('kernelAmount').value;
+    
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      alert("Please enter a valid amount in USDC.");
+      return;
+    }
     const amt6 = ethers.parseUnits(amount, 6);
+    
     const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
     
     try {
@@ -433,7 +451,13 @@ async function fundVault() {
   try {
     const amount = document.getElementById('fundAmount').value;
     if (!amount || isNaN(amount)) return alert('Enter a valid number');
+    
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      alert("Please enter a valid amount in USDC.");
+      return;
+    }
     const amt6 = ethers.parseUnits(amount, 6);
+    
     const tx = await yieldVaultContract.receiveYield(amt6);
     await tx.wait();
     alert('Vault funded!');
@@ -562,7 +586,13 @@ async function approveKernel() {
     const amount = document.getElementById('kernelAmount').value;
     if (!amount) return alert("Enter amount");
     const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
+    
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      alert("Please enter a valid amount in USDC.");
+      return;
+    }
     const amt6 = ethers.parseUnits(amount, 6);
+    
     const tx = await usdcContract.approve(kernelAddress, amt6);
     await tx.wait();
     alert("USDC approved for Kernel");
@@ -575,7 +605,13 @@ async function approveKernel() {
 async function fundKernel() {
   try {
     const amount = document.getElementById('kernelAmount').value;
+    
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      alert("Please enter a valid amount in USDC.");
+      return;
+    }
     const amt6 = ethers.parseUnits(amount, 6);
+    
     const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
     
     try {
