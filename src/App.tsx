@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
+import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react'
 import { WagmiConfig } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -12,13 +12,12 @@ import { useInvestorVault } from './hooks/useInvestorVault';
 import { useKernelSmartAccount } from './hooks/useKernelSmartAccount';
 import { useYieldVault } from './hooks/useYieldVault';
 
-const projectId = 'SERVICE_COIN_REAL_YIELD';
-
+const projectId = 'SERVICE_COIN_REAL_YIELD'
 const metadata = {
   name: 'Service Coin DAO',
   description: 'Real Yield Dashboard',
   url: 'https://www.servicerevenue.net',
-  icons: ['https://www.servicerevenue.net/icon.png'],
+  icons: ['https://www.servicerevenue.net/icon.png']
 };
 
 const chains = [arbitrum];
@@ -35,10 +34,8 @@ export default function App() {
   return (
     <WagmiConfig config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <div className="min-h-screen bg-black text-white p-4 space-y-6 max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-orange-400 text-center">
-            Service Coin: Real Yield Dashboard
-          </h1>
+        <div className="min-h-screen bg-black text-white p-4 space-y-6">
+          <h1 className="text-3xl font-bold text-orange-400">Service Coin: Real Yield Dashboard</h1>
           <VaultOverview data={vaultData} />
           <InvestorPanel data={investorData} />
           <DaoToolsPanel data={kernelData} />

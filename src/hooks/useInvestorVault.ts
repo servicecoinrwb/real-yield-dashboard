@@ -10,48 +10,21 @@ export function useInvestorVault() {
 
   async function fetch() {
     if (!address) return;
-
-    try {
-      const [share, claimable, claimed, unlockTime] = await readContract({
-        address: INVESTOR_VAULT,
-        abi: InvestorVaultABI,
-        functionName: 'getInvestorInfo',
-        args: [address],
-      }) as any;
-
-      setData({
-        share,
-        claimable,
-        claimed,
-        unlockTime,
-        claim: async () =>
-          await writeContract({
-            address: INVESTOR_VAULT,
-            abi: InvestorVaultABI,
-            functionName: 'claimYield',
-          }),
-        compound: async () =>
-          await writeContract({
-            address: INVESTOR_VAULT,
-            abi: InvestorVaultABI,
-            functionName: 'compoundYield',
-          }),
-        withdraw: async () =>
-          await writeContract({
-            address: INVESTOR_VAULT,
-            abi: InvestorVaultABI,
-            functionName: 'withdraw',
-            args: [share],
-          }),
-      });
-    } catch (error) {
-      console.error('InvestorVault fetch error:', error);
-    }
+    const [share, claimable, claimed, unlockTime] = await readContract({
+      address: INVESTOR_VAULT,
+      abi: InvestorVaultABI,
+      functionName: 'getInvestorInfo',
+      args: [address]
+    }) as any;
+    setData({
+      share, claimable, claimed, unlockTime,
+      claim: () => writeContract({ address: INVESTOR_VAULT, abi: InvestorVaultABI, functionName: 'claimYield' }),
+      compound: () => writeContract({ address: INVESTOR_VAULT, abi: InvestorVaultABI, functionName: 'compoundYield' }),
+      withdraw: () => writeContract({ address: INVESTOR_VAULT, abi: InvestorVaultABI, functionName: 'withdraw', args: [share] })
+    });
   }
 
-  useEffect(() => {
-    fetch();
-  }, [address]);
+  useEffect(() => { fetch(); }, [address]);
 
   return data;
 }

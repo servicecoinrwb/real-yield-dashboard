@@ -7,35 +7,19 @@ export function useYieldVault() {
   const [data, setData] = useState<any>({});
 
   async function fetch() {
-    try {
-      const [vaultBalance, totalShares, totalYield] = await Promise.all([
-        readContract({
-          address: YIELD_VAULT,
-          abi: YieldVaultABI,
-          functionName: 'getVaultBalance',
-        }),
-        readContract({
-          address: YIELD_VAULT,
-          abi: YieldVaultABI,
-          functionName: 'getTotalFeesAccumulatedInVault',
-        }),
-        readContract({
-          address: YIELD_VAULT,
-          abi: YieldVaultABI,
-          functionName: 'totalFeesAccumulatedInVault',
-        }),
-      ]);
+    const [totalUSDC, totalShares, totalYield] = await Promise.all([
+      readContract({ address: YIELD_VAULT, abi: YieldVaultABI, functionName: 'getVaultBalance' }),
+      readContract({ address: YIELD_VAULT, abi: YieldVaultABI, functionName: 'getTotalFeesAccumulatedInVault' }),
+      readContract({ address: YIELD_VAULT, abi: YieldVaultABI, functionName: 'totalFeesAccumulatedInVault' }),
+    ]);
+    setData({
+      totalUSDC, totalShares, totalYield,
+      vaultBalance: totalUSDC,
+      sweepToTreasury: () => writeContract({ address: YIELD_VAULT, abi: YieldVaultABI, functionName: 'sweepToTreasury', args: [totalUSDC] })
+    });
+  }
 
-      setData({
-        totalUSDC: vaultBalance,
-        totalShares,
-        totalYield,
-        vaultBalance,
-        sweepToTreasury: async () =>
-          await writeContract({
-            address: YIELD_VAULT,
-            abi: YieldVaultABI,
-            functionName: 'sweepToTreasury',
-            args: [vaultBalance],
-          }),
-      });
+  useEffect(() => { fetch(); }, []);
+
+  return data;
+}
