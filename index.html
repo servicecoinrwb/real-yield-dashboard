@@ -13,7 +13,7 @@ async function fetchVaultTotals() {
   try {
     const [vaultBalance, totalFees] = await Promise.all([
   yieldVaultContract.getVaultBalance(),
-  yieldVaultContract.getTotalFeesAccumulatedInVault()
+  yieldVaultContract.totalFeesAccumulatedInVault()
 ]);
     const usdc = ethers.formatUnits(vaultBalance.toString(), 6);
     const totalYield = ethers.formatUnits(totalFees.toString(), 6);
@@ -289,7 +289,7 @@ async function fetchVaultTotals() {
   try {
     const [vaultBalance, totalFees] = await Promise.all([
   yieldVaultContract.getVaultBalance(),
-  yieldVaultContract.getTotalFeesAccumulatedInVault()
+  yieldVaultContract.totalFeesAccumulatedInVault()
 ]);
     const usdc = ethers.formatUnits(vaultBalance.toString(), 6);
     const totalYield = ethers.formatUnits(totalFees.toString(), 6);
