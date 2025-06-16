@@ -312,6 +312,15 @@ async function fundKernel() {
   </div>
 
   <script>
+const investorVaultAbi = [
+  {
+    name: "fundKernel",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: []
+  }
+];
     const provider = new ethers.BrowserProvider(window.ethereum);
     let signer, contract;
     const investorVaultAddress = '0x1a51f1966d35661573908DC913307076d937aa90';
