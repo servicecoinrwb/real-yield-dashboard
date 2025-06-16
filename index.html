@@ -11,15 +11,17 @@
 // DAO contract integration
 async function fetchVaultTotals() {
   try {
-    const data = await yieldVaultContract.getVaultTotals();
-    const usdc = ethers.formatUnits(data.totalUSDC.toString(), 6);
-    const yieldVal = ethers.formatUnits(data.totalYield.toString(), 6);
-    const shares = data.totalSharesMinted.toString();
+    const [vaultBalance, totalFees] = await Promise.all([
+  yieldVaultContract.getVaultBalance(),
+  yieldVaultContract.getTotalFeesAccumulatedInVault()
+]);
+    const usdc = ethers.formatUnits(vaultBalance.toString(), 6);
+    const totalYield = ethers.formatUnits(totalFees.toString(), 6);
+    const shares = 'N/A';
 
     document.getElementById('vaultTotalsContent').innerHTML = 
-      `<p>Total Deposited: $${parseFloat(usdc).toFixed(2)}</p>` +
-      `<p>Total Yield Distributed: $${parseFloat(yieldVal).toFixed(2)}</p>` +
-      `<p>Total Shares Minted: ${shares}</p>`;
+      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` +
+      `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
   } catch (err) {
     console.error('Vault totals error:', err);
     document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
@@ -285,15 +287,17 @@ document.getElementById('claimableYield').textContent = "$" + parseFloat(ethers.
 // DAO contract integration
 async function fetchVaultTotals() {
   try {
-    const data = await yieldVaultContract.getVaultTotals();
-    const usdc = ethers.formatUnits(data.totalUSDC.toString(), 6);
-    const yieldVal = ethers.formatUnits(data.totalYield.toString(), 6);
-    const shares = data.totalSharesMinted.toString();
+    const [vaultBalance, totalFees] = await Promise.all([
+  yieldVaultContract.getVaultBalance(),
+  yieldVaultContract.getTotalFeesAccumulatedInVault()
+]);
+    const usdc = ethers.formatUnits(vaultBalance.toString(), 6);
+    const totalYield = ethers.formatUnits(totalFees.toString(), 6);
+    const shares = 'N/A';
 
     document.getElementById('vaultTotalsContent').innerHTML = 
-      `<p>Total Deposited: $${parseFloat(usdc).toFixed(2)}</p>` +
-      `<p>Total Yield Distributed: $${parseFloat(yieldVal).toFixed(2)}</p>` +
-      `<p>Total Shares Minted: ${shares}</p>`;
+      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` +
+      `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
   } catch (err) {
     console.error('Vault totals error:', err);
     document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
