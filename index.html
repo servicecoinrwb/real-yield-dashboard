@@ -13,7 +13,7 @@ async function fetchVaultTotals() {
   try {
     const [vaultBalance, totalFees] = await Promise.all([
   yieldVaultContract.getVaultBalance(),
-  yieldVaultContract.totalFeesAccumulatedInVault()
+  yieldVaultContract.getTotalFeesAccumulatedInVault()
 ]);
     const usdc = ethers.formatUnits(BigInt(vaultBalance), 6);
     const totalYield = ethers.formatUnits(BigInt(totalFees), 6);
