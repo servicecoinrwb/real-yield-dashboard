@@ -29,6 +29,10 @@
             <h2 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Your Wallet</h2>
             <div id="userInfo" class="space-y-2 text-lg">
                 <p>Address: <span id="walletAddress" class="font-mono text-sm bg-gray-700 p-1 rounded"></span></p>
+                <p class="text-yellow-400 text-sm">This dApp requires Native USDC. Check your balances below.</p>
+                <p>Native USDC Balance: <span id="nativeUsdcBalance" class="font-bold text-cyan-400">...</span></p>
+                <p>Bridged USDC.e Balance: <span id="bridgedUsdcBalance" class="font-bold text-gray-400">...</span></p>
+                <hr class="border-gray-700 my-2">
                 <p>Your Shares (Investor Vault): <span id="userShares" class="font-bold text-green-400">...</span></p>
                 <p>Claimable Yield (Investor Vault): <span id="claimableYield" class="font-bold text-green-400">...</span></p>
             </div>
@@ -103,13 +107,14 @@
 
 <script>
     // --- Global Scope Variables ---
-    let provider, signer, usdcContract, investorVaultContract, yieldVaultContract, kernelContract;
+    let provider, signer, usdcContract, usdcEContract, investorVaultContract, yieldVaultContract, kernelContract;
     let currentAddress;
     let shareAmount = 0n;
 
     // --- Contract Addresses & ABIs ---
     const addresses = {
-        usdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+        nativeUsdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+        bridgedUsdc: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', // This is USDC.e
         investorVault: '0x1a51f1966d35661573908DC913307076d937aa90',
         yieldVault: '0x44D64E1B9dC5F90b389900Da24B8de631222432C',
         kernel: '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1',
@@ -131,7 +136,8 @@
             signer = await provider.getSigner();
             currentAddress = await signer.getAddress();
             
-            usdcContract = new ethers.Contract(addresses.usdc, abis.usdc, signer);
+            usdcContract = new ethers.Contract(addresses.nativeUsdc, abis.usdc, signer);
+            usdcEContract = new ethers.Contract(addresses.bridgedUsdc, abis.usdc, signer); // Contract for USDC.e
             investorVaultContract = new ethers.Contract(addresses.investorVault, abis.investorVault, signer);
             yieldVaultContract = new ethers.Contract(addresses.yieldVault, abis.yieldVault, signer);
             kernelContract = new ethers.Contract(addresses.kernel, abis.kernel, signer);
@@ -157,13 +163,22 @@
     // --- Data Fetching ---
     async function fetchUserData() {
         try {
+            // Fetch Native and Bridged USDC balances
+            const nativeBalance = await usdcContract.balanceOf(currentAddress);
+            const bridgedBalance = await usdcEContract.balanceOf(currentAddress);
+            document.getElementById('nativeUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(nativeBalance, 6)).toFixed(4)} USDC`;
+            document.getElementById('bridgedUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(bridgedBalance, 6)).toFixed(4)} USDC.e`;
+
+            // Fetch user info from the investor vault
             const info = await investorVaultContract.getInvestorInfo(currentAddress);
             shareAmount = info.share;
             const claimable = ethers.formatUnits(info.claimable, 6);
             document.getElementById('userShares').textContent = ethers.formatUnits(shareAmount, 18);
             document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(4)}`;
         } catch (err) {
-            console.error("Error fetching investor info:", err);
+            console.error("Error fetching user data:", err);
+            document.getElementById('nativeUsdcBalance').textContent = "Error";
+            document.getElementById('bridgedUsdcBalance').textContent = "Error";
             document.getElementById('userShares').textContent = "Error";
             document.getElementById('claimableYield').textContent = "Error";
         }
@@ -189,6 +204,7 @@
 
     // --- User Actions ---
     async function approveDeposit() {
+        // We approve the native USDC contract for the investor vault
         await handleApproval(document.getElementById('depositAmount').value, addresses.investorVault);
     }
     async function deposit() {
@@ -245,7 +261,10 @@
 
         try {
             investorVaultContract.on('*', (event) => addLogEntry(event, 'InvestorVault'));
-            yieldVaultContract.on('*', (event) => addLogEntry(event, 'YieldVault'));
+            yieldVaultContract.on('*', 'FeesSweptToTreasury', (treasury, amount) => {
+                const fakeEvent = { fragment: { name: 'FeesSweptToTreasury' }, args: { treasury, amount } };
+                addLogEntry(fakeEvent, 'YieldVault');
+            });
             kernelContract.on('*', (event) => addLogEntry(event, 'Kernel'));
         } catch (e) {
             console.error("Fatal error setting up event listeners:", e);
@@ -294,6 +313,7 @@
         if (!amount || isNaN(amount) || Number(amount) <= 0) return showModal("Input Error", "Please enter a valid amount to approve.");
         showModal("Processing", "Requesting approval from your wallet...");
         try {
+            // We specifically approve the NATIVE USDC contract
             const tx = await usdcContract.approve(spender, ethers.parseUnits(amount, 6));
             await tx.wait();
             showModal("Success", `Successfully approved ${amount} USDC.`);
@@ -358,4 +378,4 @@
 </script>
 
 </body>
-</html>
+</ht
