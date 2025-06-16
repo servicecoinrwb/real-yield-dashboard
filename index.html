@@ -3,362 +3,361 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Service Coin Dashboard</title>
+  <title>Service Coin Real-Yield Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+  <style>
+    /* Custom scrollbar for the event log */
+    #eventLog::-webkit-scrollbar {
+        width: 8px;
+    }
+    #eventLog::-webkit-scrollbar-track {
+        background: #2d3748; /* gray-800 */
+    }
+    #eventLog::-webkit-scrollbar-thumb {
+        background: #718096; /* gray-500 */
+        border-radius: 4px;
+    }
+    #eventLog::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0; /* gray-400 */
+    }
+  </style>
 </head>
 
-<body class="bg-black text-white font-sans">
-  <div class="max-w-2xl mx-auto p-6 text-center">
-    <h1 class="text-3xl font-bold text-orange-400 mb-4">Service Coin Real Yield Dashboard</h1>
+<body class="bg-gray-900 text-gray-100 font-sans">
+  <div class="max-w-3xl mx-auto p-4 md:p-6 text-center">
+    <h1 class="text-3xl font-bold text-orange-400 mb-6">Service Coin Real-Yield Dashboard</h1>
 
-    <div id="walletStatus" class="mb-4">
-      <button onclick="connectWallet()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded">
+    <!-- Wallet Connection -->
+    <div id="walletStatus" class="mb-6">
+      <button onclick="connectWallet()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-transform transform hover:scale-105">
         Connect Wallet
       </button>
     </div>
 
-    <div id="userInfo" class="hidden space-y-3">
-      <p>Wallet: <span id="walletAddress"></span></p>
-      <p>Claimable Yield: <span id="claimableYield">...</span></p>
-      <p>Shares: <span id="userShares">...</span></p>
-      <div class="flex justify-center gap-3 mt-3">
-        <button onclick="claimYield()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Claim</button>
-        <button onclick="compoundYield()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded">Compound</button>
-        <button onclick="withdraw()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Withdraw</button>
-      </div>
+    <!-- User Information Section -->
+    <div id="userSection" class="hidden text-left space-y-6">
+        <!-- User Balances -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Your Wallet</h2>
+            <div id="userInfo" class="space-y-2 text-lg">
+                <p>Address: <span id="walletAddress" class="font-mono text-sm bg-gray-700 p-1 rounded"></span></p>
+                <p>Your Shares: <span id="userShares" class="font-bold text-green-400">...</span></p>
+                <p>Claimable Yield: <span id="claimableYield" class="font-bold text-green-400">...</span></p>
+            </div>
+        </div>
+
+        <!-- User Actions -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Your Actions</h2>
+            <!-- Deposit -->
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Deposit USDC to get Shares:</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="depositAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600 focus:ring-orange-500 focus:border-orange-500" />
+                    <button onclick="approveDeposit()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold whitespace-nowrap">Approve</button>
+                    <button onclick="deposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Deposit</button>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">First approve, then deposit.</p>
+            </div>
+            <!-- Claim, Compound, Withdraw -->
+            <div class="flex flex-wrap justify-around gap-3 mt-3">
+              <button onclick="claimYield()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md font-semibold flex-grow">Claim Yield</button>
+              <button onclick="compoundYield()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md font-semibold text-black flex-grow">Compound Yield</button>
+              <button onclick="withdraw()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-semibold flex-grow">Withdraw All</button>
+            </div>
+        </div>
     </div>
+    
+    <!-- DAO Tools Section -->
+    <div id="daoTools" class="hidden mt-8 border-t-2 border-orange-400 pt-6 text-left space-y-6">
+        <h2 class="text-2xl font-semibold text-orange-300 mb-4 text-center">DAO Administrator Tools</h2>
 
-    <div id="daoTools" class="hidden mt-8 border-t border-orange-400 pt-4 text-left">
-        <h2 class="text-xl font-semibold text-orange-300 mb-4 text-center">DAO Tools</h2>
-
-        <div id="vaultStats" class="text-sm text-center mb-4"></div>
-
-        <div class="mb-4 p-3 border border-gray-700 rounded">
-          <h3 class="text-lg font-semibold text-orange-300 mb-2">DAO Mode</h3>
-          <label class="inline-flex items-center gap-2 mb-2">
-            <input type="checkbox" id="daoOverride" class="form-checkbox h-4 w-4 text-orange-600">
-            <span>Enable DAO tools for this wallet (testing)</span>
-          </label>
-          <div class="text-sm mt-2 text-gray-300" id="usdcStatus">Checking USDC balance...</div>
+        <!-- Global Stats -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Global Stats</h3>
+            <div id="globalStats" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-md">
+                <p>Kernel Address: <span id="kernelAddress" class="font-mono text-sm bg-gray-700 p-1 rounded">...</span></p>
+                <p>Kernel Balance: <span id="kernelBalance" class="font-bold text-yellow-300">...</span></p>
+                <p>Vault Total Deposits: <span id="vaultTotalDeposits" class="font-bold text-blue-300">...</span></p>
+                <p>Vault Total Yield: <span id="vaultTotalYield" class="font-bold text-blue-300">...</span></p>
+            </div>
         </div>
 
-        <div class="mb-4 p-3 border border-gray-700 rounded">
-            <h3 class="text-lg font-semibold text-orange-300 mb-2">Fund Kernel</h3>
-            <label class="block mb-1 text-sm">Amount (USDC):</label>
-            <input id="kernelAmount" type="number" placeholder="0.0" class="text-black w-full p-2 rounded mb-2" />
-            <div class="flex gap-2">
-              <button onclick="approveKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded w-1/2">Approve USDC</button>
-              <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded w-1/2">Fund Kernel</button>
+        <!-- DAO Actions -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">DAO Actions</h3>
+            <!-- Fund Kernel -->
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Fund Kernel (USDC):</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
+                </div>
+            </div>
+             <!-- Fund Yield -->
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Add Yield to Vault (USDC):</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="fundAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="fundVault()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Add Yield</button>
+                </div>
             </div>
         </div>
         
-        <div id="vaultTotals" class="text-sm text-gray-300 mb-4 p-3 border border-gray-700 rounded">
-            <h3 class="text-orange-300 font-semibold mb-2">Vault Totals</h3>
-            <div id="vaultTotalsContent">Loading...</div>
-        </div>
-
-        <div class="mb-4 p-3 border border-gray-700 rounded">
-            <h3 class="text-lg font-semibold text-orange-300 mb-2">Fund Yield Vault</h3>
-            <label class="block mb-1 text-sm">Amount (USDC):</label>
-            <input id="fundAmount" type="number" placeholder="0.0" class="text-black w-full p-2 rounded" />
-            <button onclick="fundVault()" class="mt-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded w-full">Fund Vault</button>
-        </div>
-
-        <div class="mb-4 p-3 border border-gray-700 rounded">
-            <h3 class="text-lg font-semibold text-orange-300 mb-2">Batch Operations</h3>
-            <p class="text-sm text-gray-400 mb-4">DAO-only functions (batchClaim, batchWithdraw)</p>
-            <textarea id="batchAddresses" placeholder="Enter investor addresses (comma-separated)" class="w-full p-2 text-black rounded mb-2"></textarea>
-            <div class="space-x-3">
-              <button onclick="daoBatchClaim()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded">Batch Claim</button>
-              <button onclick="daoBatchWithdraw()" class="bg-red-700 hover:bg-red-800 px-4 py-2 rounded">Batch Withdraw</button>
-              <button onclick="sweepFeesToTreasury()" class="bg-yellow-700 hover:bg-yellow-800 px-4 py-2 rounded">Sweep Fees</button>
+        <!-- Batch Operations -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Batch Operations</h3>
+            <textarea id="batchAddresses" placeholder="Enter investor addresses, one per line" class="w-full p-2 bg-gray-700 text-white rounded-md border border-gray-600 h-24"></textarea>
+            <div class="space-x-3 mt-2">
+              <button onclick="daoBatchClaim()" class="bg-green-800 hover:bg-green-900 px-4 py-2 rounded-md font-semibold">Batch Claim</button>
+              <button onclick="daoBatchWithdraw()" class="bg-red-800 hover:bg-red-900 px-4 py-2 rounded-md font-semibold">Batch Withdraw</button>
             </div>
         </div>
         
-        <div class="mt-8 text-left border-t border-gray-700 pt-4">
-            <h3 class="text-lg font-semibold text-orange-300 mb-2">📜 Transaction Log (Kernel + Vault)</h3>
-            <ul id="eventLog" class="text-sm text-gray-400 space-y-1 h-32 overflow-y-auto"></ul>
+        <!-- Transaction Log -->
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold text-orange-300 mb-2">📜 Transaction Log</h3>
+            <ul id="eventLog" class="text-sm text-gray-300 space-y-1 h-48 overflow-y-auto bg-gray-900 p-2 rounded-md">
+                <li>Listening for contract events...</li>
+            </ul>
         </div>
     </div>
   </div>
 
 <script>
     // --- Global Variables & Constants ---
-    let provider, signer, contract, kernelContract, yieldVaultContract;
+    let provider, signer, contract, usdcContract;
     let currentAddress;
-    let shareAmount = 0;
+    let shareAmount = 0n; // Use BigInt for share amount
 
-    const investorVaultAddress = '0x1a51f1966d35661573908DC913307076d937aa90';
-    const kernelAddress = '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1';
-    const yieldVaultAddress = '0x44D64E1B9dC5F90b389900Da24B8de631222432C';
-    const usdcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; // USDC on Arbitrum
+    // Contract addresses on Arbitrum
+    const vaultContractAddress = '0x1a51f1966d35661573908DC913307076d937aa90';
+    const usdcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; 
     const daoWallet = '0xcfe077e6f7554B1724546E02624a0832D1f4557a';
 
     // --- ABIs (Application Binary Interfaces) ---
-    const investorVaultAbi = [
-        { "inputs": [{"internalType":"address","name":"investor","type":"address"}], "name":"getInvestorInfo", "outputs":[ {"internalType":"uint256","name":"share","type":"uint256"}, {"internalType":"uint256","name":"claimable","type":"uint256"}, {"internalType":"uint256","name":"claimed","type":"uint256"}, {"internalType":"uint256","name":"unlockTime","type":"uint256"} ], "stateMutability":"view", "type":"function" },
-        { "name":"claimYield", "type":"function", "inputs":[], "outputs":[], "stateMutability":"nonpayable" },
-        { "name":"compoundYield", "type":"function", "inputs":[], "outputs":[], "stateMutability":"nonpayable" },
-        { "name":"withdraw", "type":"function", "inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
-        { "name": "fundKernel", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "amount", "type": "uint256" }], "outputs": [] }
-    ];
+    // Combined ABI for the main Vault Contract
+    const vaultAbi = [{"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesMinted","type":"uint256"}],"name":"Deposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldKernel","type":"address"},{"indexed":true,"internalType":"address","name":"newKernel","type":"address"}],"name":"KernelUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesBurned","type":"uint256"}],"name":"Withdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newShares","type":"uint256"}],"name":"YieldCompounded","type":"event"},{"inputs":[],"name":"LOCKUP_PERIOD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchClaimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchWithdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"claimableYield","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"compoundYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"uint256","name":"amount"}],"name":"fundKernel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"getInvestorInfo","outputs":[{"internalType":"uint256","name":"share","type":"uint256"},{"internalType":"uint256","name":"claimable","type":"uint256"},{"internalType":"uint256","name":"claimed","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVaultTotals","outputs":[{"internalType":"uint256","name":"totalUSDC","type":"uint256"},{"internalType":"uint256","name":"totalSharesMinted","type":"uint256"},{"internalType":"uint256","name":"totalYield","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"kernel","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"receiveYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+    const usdcAbi = [ { "constant":false, "inputs":[ { "name":"_spender", "type":"address" }, { "name":"_value", "type":"uint256" } ], "name":"approve", "outputs":[ { "name":"", "type":"bool" } ], "payable":false, "stateMutability":"nonpayable", "type":"function" }, { "constant":true, "inputs":[], "name":"totalSupply", "outputs":[ { "name":"", "type":"uint256" } ], "payable":false, "stateMutability":"view", "type":"function" }, { "constant":true, "inputs":[ { "name":"_owner", "type":"address" } ], "name":"balanceOf", "outputs":[ { "name":"balance", "type":"uint256" } ], "payable":false, "stateMutability":"view", "type":"function" }, { "constant":true, "inputs":[ { "name":"_owner", "type":"address" }, { "name":"_spender", "type":"address" } ], "name":"allowance", "outputs":[ { "name":"", "type":"uint256" } ], "payable":false, "stateMutability":"view", "type":"function" } ];
+    const minimalKernelAbi = [{ "inputs": [], "name": "getKernelBalance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }];
 
-    const kernelAbi = [
-        { "name":"batchClaimYield", "type":"function", "inputs":[{"name":"investors","type":"address[]"}], "outputs":[], "stateMutability":"nonpayable" },
-        { "name":"batchWithdraw", "type":"function", "inputs":[{"name":"investors","type":"address[]"}], "outputs":[], "stateMutability":"nonpayable" },
-        { "name":"getKernelBalance", "type":"function", "inputs":[], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
-        { "name":"fundKernel", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" }
-    ];
-
-    const yieldVaultAbi = [
-        { "name":"getVaultTotals", "type":"function", "inputs":[], "outputs":[ {"name":"totalUSDC","type":"uint256"}, {"name":"totalSharesMinted","type":"uint256"}, {"name":"totalYield","type":"uint256"} ], "stateMutability":"view" },
-        { "name":"receiveYield", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
-        { "name":"sweepToTreasury", "type":"function", "inputs":[{"name":"_amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
-        { "name":"getVaultBalance", "type":"function", "inputs":[], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
-    ];
-
-    const usdcAbi = [
-        { "name":"approve", "type":"function", "inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}], "outputs":[{"name":"","type":"bool"}], "stateMutability":"nonpayable" },
-        { "name":"allowance", "type":"function", "inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
-        { "name":"balanceOf", "type":"function", "inputs":[{"name":"owner","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
-    ];
-
-    // --- Wallet and User Functions ---
+    // --- Main Functions ---
     async function connectWallet() {
-        if (!window.ethereum) return alert("Please install MetaMask.");
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        currentAddress = await signer.getAddress();
-        
-        contract = new ethers.Contract(investorVaultAddress, investorVaultAbi, signer);
+        if (!window.ethereum) return showModal("Error", "Please install MetaMask to use this dApp.");
+        try {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            currentAddress = await signer.getAddress();
+            
+            // Initialize main contract instances
+            contract = new ethers.Contract(vaultContractAddress, vaultAbi, signer);
+            usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
 
-        document.getElementById('walletStatus').innerHTML = `<p class="text-green-400">Connected: ${currentAddress}</p>`;
-        document.getElementById('walletAddress').textContent = currentAddress;
-        document.getElementById('userInfo').classList.remove('hidden');
+            // Update UI
+            document.getElementById('walletStatus').innerHTML = `<p class="text-green-400">Connected</p>`;
+            document.getElementById('walletAddress').textContent = currentAddress;
+            document.getElementById('userSection').classList.remove('hidden');
 
-        if (document.getElementById('daoOverride').checked || currentAddress.toLowerCase() === daoWallet.toLowerCase()) {
-            document.getElementById('daoTools').classList.remove('hidden');
-            initializeDaoContracts();
-            loadAllDaoData();
+            // Check for DAO access
+            const owner = await contract.owner();
+            if (currentAddress.toLowerCase() === owner.toLowerCase()) {
+                document.getElementById('daoTools').classList.remove('hidden');
+                fetchAllDaoData();
+            }
+
+            fetchUserData();
+            setupEventListeners();
+        } catch (error) {
+            console.error("Failed to connect wallet:", error);
+            showModal("Error", `Failed to connect wallet: ${error.message || "Unknown error."}`);
         }
-        fetchUserData();
     }
 
+    // --- Data Fetching ---
     async function fetchUserData() {
         try {
             const info = await contract.getInvestorInfo(currentAddress);
             shareAmount = info.share;
             const claimable = ethers.formatUnits(info.claimable, 6);
 
-            document.getElementById('userShares').textContent = ethers.formatUnits(shareAmount, 6); // Assuming shares have decimals
-            document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(2)}`;
+            document.getElementById('userShares').textContent = ethers.formatUnits(shareAmount, 18); // Assuming 18 decimals for shares
+            document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(4)}`;
         } catch (err) {
             console.error("Error fetching investor info:", err);
+            document.getElementById('userShares').textContent = "Error";
             document.getElementById('claimableYield').textContent = "Error";
         }
     }
 
-    async function claimYield() {
+    async function fetchAllDaoData() {
         try {
-            const tx = await contract.claimYield();
-            await tx.wait();
-            alert("Yield claimed!");
-            fetchUserData();
-            loadAllDaoData();
+            // Get Vault Totals
+            const totals = await contract.getVaultTotals();
+            document.getElementById('vaultTotalDeposits').textContent = `$${parseFloat(ethers.formatUnits(totals.totalUSDC, 6)).toFixed(2)}`;
+            document.getElementById('vaultTotalYield').textContent = `$${parseFloat(ethers.formatUnits(totals.totalYield, 6)).toFixed(2)}`;
+
+            // Get Kernel Info
+            const currentKernelAddress = await contract.kernel();
+            document.getElementById('kernelAddress').textContent = currentKernelAddress;
+            const kernelContract = new ethers.Contract(currentKernelAddress, minimalKernelAbi, provider);
+            const kernelBalance = await kernelContract.getKernelBalance();
+            document.getElementById('kernelBalance').textContent = `$${parseFloat(ethers.formatUnits(kernelBalance, 6)).toFixed(2)}`;
+
         } catch (err) {
-            console.error(err);
-            alert("Claim failed.");
+            console.error('Error fetching DAO data:', err);
+            showModal("DAO Data Error", "Could not fetch all DAO statistics.");
         }
+    }
+
+    // --- User Actions ---
+    async function approveDeposit() {
+        await handleApproval(document.getElementById('depositAmount').value, vaultContractAddress);
+    }
+
+    async function deposit() {
+        await handleTransaction('deposit', document.getElementById('depositAmount').value, "Deposit");
+    }
+
+    async function claimYield() {
+        await handleTransaction('claimYield', null, "Claim Yield");
     }
 
     async function compoundYield() {
-        try {
-            const tx = await contract.compoundYield();
-            await tx.wait();
-            alert("Yield compounded!");
-            fetchUserData();
-            loadAllDaoData();
-        } catch (err) {
-            console.error(err);
-            alert("Compound failed.");
-        }
-    }
-
-    async function withdraw() {
-        try {
-            const tx = await contract.withdraw(shareAmount);
-            await tx.wait();
-            alert("Withdraw complete!");
-            fetchUserData();
-            loadAllDaoData();
-        } catch (err) {
-            console.error(err);
-            alert("Withdraw failed.");
-        }
-    }
-
-    // --- DAO Functions ---
-    function initializeDaoContracts() {
-        kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-        yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, signer);
-    }
-
-    function loadAllDaoData(){
-        if(kernelContract && yieldVaultContract) {
-            loadVaultStats();
-            fetchVaultTotals();
-            updateUSDCStatus();
-        }
-    }
-
-    async function fetchVaultTotals() {
-        try {
-            const totals = await yieldVaultContract.getVaultTotals();
-            const balance = await yieldVaultContract.getVaultBalance();
-            const formattedBalance = ethers.formatUnits(balance, 6);
-            const totalYield = ethers.formatUnits(totals.totalYield, 6);
-
-            document.getElementById('vaultTotalsContent').innerHTML =
-                `<p>Vault Balance: $${parseFloat(formattedBalance).toFixed(2)}</p>` +
-                `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
-        } catch (err) {
-            console.error('Vault totals error:', err);
-            document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
-        }
-    }
-
-    async function fundVault() {
-        try {
-            const amount = document.getElementById('fundAmount').value;
-            if (!amount || isNaN(amount) || Number(amount) <= 0) {
-                return alert("Please enter a valid amount in USDC.");
-            }
-            const amt6 = ethers.parseUnits(amount, 6);
-            const tx = await yieldVaultContract.receiveYield(amt6);
-            await tx.wait();
-            alert('Vault funded!');
-            loadAllDaoData();
-        } catch (err) {
-            console.error('Funding failed:', err);
-            alert('Funding failed.');
-        }
-    }
-
-    async function loadVaultStats() {
-        try {
-            const [vaultBalance, kernelBalance] = await Promise.all([
-                yieldVaultContract.getVaultBalance(),
-                kernelContract.getKernelBalance()
-            ]);
-            const vault = ethers.formatUnits(vaultBalance, 6);
-            const kernel = ethers.formatUnits(kernelBalance, 6);
-
-            document.getElementById('vaultStats').innerHTML =
-                `<p class='text-orange-300'>Vault Balance: $${parseFloat(vault).toFixed(2)}</p>` +
-                `<p class='text-yellow-300'>Kernel Balance: $${parseFloat(kernel).toFixed(2)}</p>`;
-        } catch (e) {
-            console.warn('Failed to load vault/kernel stats', e);
-        }
-    }
-
-    async function daoBatchClaim() {
-        try {
-            const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
-            const tx = await kernelContract.batchClaimYield(investors);
-            await tx.wait();
-            alert("Batch claim successful.");
-        } catch (err) {
-            console.error(err);
-            alert("Batch claim failed.");
-        }
-    }
-
-    async function daoBatchWithdraw() {
-        try {
-            const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
-            const tx = await kernelContract.batchWithdraw(investors);
-            await tx.wait();
-            alert("Batch withdraw successful.");
-        } catch (err) {
-            console.error(err);
-            alert("Batch withdraw failed.");
-        }
-    }
-
-    async function sweepFeesToTreasury() {
-        try {
-            const vaultBalance = await yieldVaultContract.getVaultBalance();
-            const tx = await yieldVaultContract.sweepToTreasury(vaultBalance);
-            await tx.wait();
-            alert("Fees swept to treasury.");
-            loadAllDaoData();
-        } catch (err) {
-            console.error(err);
-            alert("Sweep failed.");
-        }
+        await handleTransaction('compoundYield', null, "Compound Yield");
     }
     
-    async function updateUSDCStatus() {
-        try {
-            const usdc = new ethers.Contract(usdcTokenAddress, usdcAbi, provider);
-            const balance = await usdc.balanceOf(currentAddress);
-            const allowance = await usdc.allowance(currentAddress, investorVaultAddress); // Allowance for InvestorVault
-            const bal = ethers.formatUnits(balance, 6);
-            const allow = ethers.formatUnits(allowance, 6);
-
-            document.getElementById('usdcStatus').innerHTML =
-                `<p>Your USDC Balance: $${parseFloat(bal).toFixed(2)}</p>` +
-                `<p>Kernel (via Vault) Allowance: $${parseFloat(allow).toFixed(2)}</p>`;
-        } catch (e) {
-            console.warn("USDC status error", e);
-            document.getElementById('usdcStatus').textContent = "Error loading USDC status";
+    async function withdraw() {
+        if (shareAmount === 0n) {
+            return showModal("Withdraw Error", "You have no shares to withdraw.");
         }
+        await handleTransaction('withdraw', shareAmount, "Withdraw", false); // Pass share amount directly
     }
 
-    async function approveKernel() {
-        try {
-            const amount = document.getElementById('kernelAmount').value;
-            if (!amount || isNaN(amount) || Number(amount) <= 0) {
-                return alert("Please enter a valid amount to approve.");
-            }
-            const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-            const amt6 = ethers.parseUnits(amount, 6);
-            const tx = await usdcContract.approve(investorVaultAddress, amt6); // Approve the InvestorVault
-            await tx.wait();
-            alert("USDC approved for Investor Vault to fund Kernel");
-            updateUSDCStatus();
-        } catch (e) {
-            console.error("Approve failed", e);
-            alert("Approval failed.");
-        }
+    // --- DAO Actions ---
+    async function fundVault() {
+        await handleTransaction('receiveYield', document.getElementById('fundAmount').value, "Add Yield");
     }
 
     async function fundKernel() {
-        try {
-            const amount = document.getElementById('kernelAmount').value;
-            if (!amount || isNaN(amount) || Number(amount) <= 0) {
-                return alert("Please enter a valid amount in USDC.");
-            }
-            const amt6 = ethers.parseUnits(amount, 6);
-            
-            // Check allowance first
-            const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, provider);
-            const allowance = await usdcContract.allowance(currentAddress, investorVaultAddress);
-            if (allowance < amt6) {
-                return alert("You must approve a sufficient amount of USDC before funding.");
-            }
+        await handleTransaction('fundKernel', document.getElementById('kernelAmount').value, "Fund Kernel");
+    }
+    
+    async function daoBatchClaim() {
+        const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(Boolean);
+        if (addresses.length === 0) return showModal("Input Error", "Please provide at least one address for batch claim.");
+        await handleTransaction('batchClaimYield', addresses, "Batch Claim", false);
+    }
+    
+    async function daoBatchWithdraw() {
+        const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(Boolean);
+        if (addresses.length === 0) return showModal("Input Error", "Please provide at least one address for batch withdraw.");
+        await handleTransaction('batchWithdraw', addresses, "Batch Withdraw", false);
+    }
+    
+    // --- Event Handling & Logging ---
+    function setupEventListeners() {
+        const eventLog = document.getElementById('eventLog');
+        if (eventLog.dataset.listening) return; // Prevent multiple listeners
+        eventLog.dataset.listening = 'true';
+        
+        eventLog.innerHTML = '<li>Listening for contract events...</li>';
 
-            // The main contract 'contract' is the InvestorVault which has fundKernel
-            const tx = await contract.fundKernel(amt6);
+        contract.on('*', (event) => {
+            addLogEntry(event);
+        });
+    }
+
+    function addLogEntry(event) {
+        const eventLog = document.getElementById('eventLog');
+        const li = document.createElement('li');
+        li.className = 'border-b border-gray-700 pb-1 mb-1';
+
+        let content = `<span class="font-bold text-orange-400">${event.fragment.name}</span>: `;
+        const args = [];
+        for (const key in event.args) {
+            if (isNaN(parseInt(key))) { // Filter out numeric array indices
+                 let value = event.args[key];
+                 if(typeof value === 'bigint') {
+                    try {
+                        value = ethers.formatUnits(value, 6) + ' USDC';
+                    } catch(e) { value = value.toString(); }
+                 }
+                 args.push(`${key}: <span class="text-green-300">${value}</span>`);
+            }
+        }
+        content += args.join(', ');
+        li.innerHTML = content;
+        
+        if (eventLog.children.length > 50) { // Keep log from growing too large
+            eventLog.removeChild(eventLog.lastChild);
+        }
+        eventLog.prepend(li);
+    }
+
+    // --- Generic Handlers ---
+    async function handleApproval(amount, spender) {
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+            return showModal("Input Error", "Please enter a valid amount to approve.");
+        }
+        showModal("Processing", "Requesting approval from your wallet...");
+        try {
+            const amountInUnits = ethers.parseUnits(amount, 6); // 6 decimals for USDC
+            const tx = await usdcContract.approve(spender, amountInUnits);
             await tx.wait();
-            alert("Kernel funded successfully!");
-            loadAllDaoData();
-        } catch (err) {
-            console.error("Funding kernel failed", err);
-            alert("Kernel fund failed: " + err.message);
+            showModal("Success", `Successfully approved ${amount} USDC for the contract.`);
+        } catch (error) {
+            console.error("Approval failed:", error);
+            showModal("Error", `Approval failed: ${error?.data?.message || error.message}`);
         }
     }
+
+    async function handleTransaction(method, value, name, isUSDC = true) {
+        showModal("Processing", `Sending ${name} transaction...`);
+        try {
+            let tx;
+            if (value !== null) {
+                const finalValue = isUSDC ? ethers.parseUnits(value, 6) : value;
+                tx = await contract[method](finalValue);
+            } else {
+                tx = await contract[method]();
+            }
+            
+            await tx.wait();
+            showModal("Success", `${name} transaction was successful!`);
+            
+            // Refresh relevant data
+            fetchUserData();
+            if (document.getElementById('daoTools').classList.contains('hidden') === false) {
+                 fetchAllDaoData();
+            }
+
+        } catch (error) {
+            console.error(`${name} failed:`, error);
+            showModal("Error", `${name} failed: ${error?.reason || error?.data?.message || error.message}`);
+        }
+    }
+    
+    // --- UI Utility ---
+    function showModal(title, message) {
+        // Remove existing modal if any
+        const existingModal = document.getElementById('alertModal');
+        if (existingModal) existingModal.remove();
+
+        // Create modal elements
+        const modal = document.createElement('div');
+        modal.id = 'alertModal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-11/12 max-w-sm text-center border-2 border-orange-500">
+                <h3 class="text-xl font-bold text-orange-400 mb-4">${title}</h3>
+                <p class="text-gray-200 mb-6">${message}</p>
+                <button onclick="document.getElementById('alertModal').remove()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold">Close</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
 </script>
 
 </body>
