@@ -9,6 +9,38 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js">
 
 // DAO contract integration
+async function fetchVaultTotals() {
+  try {
+    const data = await yieldVaultContract.getVaultTotals();
+    const usdc = ethers.formatUnits(data.totalUSDC.toString(), 6);
+    const yieldVal = ethers.formatUnits(data.totalYield.toString(), 6);
+    const shares = data.totalSharesMinted.toString();
+
+    document.getElementById('vaultTotalsContent').innerHTML = 
+      `<p>Total Deposited: $${parseFloat(usdc).toFixed(2)}</p>` +
+      `<p>Total Yield Distributed: $${parseFloat(yieldVal).toFixed(2)}</p>` +
+      `<p>Total Shares Minted: ${shares}</p>`;
+  } catch (err) {
+    console.error('Vault totals error:', err);
+    document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
+  }
+}
+
+async function fundVault() {
+  try {
+    const amount = document.getElementById('fundAmount').value;
+    if (!amount || isNaN(amount)) return alert('Enter a valid number');
+    const amt6 = ethers.parseUnits(amount, 6);
+    const tx = await yieldVaultContract.receiveYield(amt6);
+    await tx.wait();
+    alert('Vault funded!');
+    fetchVaultTotals();
+  } catch (err) {
+    console.error('Funding failed:', err);
+    alert('Funding failed.');
+  }
+}
+
 async function loadVaultStats() {
   try {
     kernelContract = new ethers.Contract(kernelAddress, kernelAbi, provider);
@@ -40,6 +72,12 @@ const kernelAbi = [
 ];
 
 const yieldVaultAbi = [
+  { "name":"getVaultTotals", "type":"function", "inputs":[], "outputs":[
+    {"name":"totalUSDC","type":"uint256"},
+    {"name":"totalSharesMinted","type":"uint256"},
+    {"name":"totalYield","type":"uint256"}
+  ], "stateMutability":"view" },
+  { "name":"receiveYield", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
   { "name":"sweepToTreasury","type":"function","inputs":[{"name":"_amount","type":"uint256"}],"outputs":[],"stateMutability":"nonpayable" },
   { "name":"getVaultBalance","type":"function","inputs":[],"outputs":[{"name":"","type":"uint256"}],"stateMutability":"view" }
 ];
@@ -112,6 +150,15 @@ async function sweepFeesToTreasury() {
 
     <div id="daoTools" class="hidden mt-8 border-t border-orange-400 pt-4">
   <div id="vaultStats" class="text-sm text-left mb-4"></div>
+<div id="vaultTotals" class="text-left text-sm text-gray-300 mb-4 p-2 border border-gray-700 rounded">
+  <h3 class="text-orange-300 font-semibold mb-2">Vault Totals</h3>
+  <div id="vaultTotalsContent">Loading...</div>
+</div>
+<div class="text-left mb-4">
+  <label class="block mb-1 text-sm">Fund Yield (USDC):</label>
+  <input id="fundAmount" type="number" placeholder="Amount in USDC" class="text-black w-full p-2 rounded" />
+  <button onclick="fundVault()" class="mt-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded">Fund Vault</button>
+</div>
       <h2 class="text-xl font-semibold text-orange-300 mb-2">DAO Tools</h2>
       <p class="text-sm text-gray-400 mb-4">DAO-only functions appear here (batchClaim, batchWithdraw)</p>
 <div class="mb-4">
@@ -174,6 +221,7 @@ async function sweepFeesToTreasury() {
       }
 
       fetchUserData();
+      fetchVaultTotals();
     }
 
     async function fetchUserData() {
@@ -182,6 +230,8 @@ async function sweepFeesToTreasury() {
         shareAmount = info.share;
 
         console.log("Investor Info:", info);
+document.getElementById('userShares').textContent = info.share.toString();
+document.getElementById('claimableYield').textContent = "$" + parseFloat(ethers.formatUnits(info.claimable.toString(), 6)).toFixed(2);
 
         document.getElementById('userShares').textContent = shareAmount;
         const claimable = ethers.formatUnits(BigInt(info.claimable), 6);
@@ -198,6 +248,7 @@ async function sweepFeesToTreasury() {
         await tx.wait();
         alert("Yield claimed!");
         fetchUserData();
+      fetchVaultTotals();
       } catch (err) {
         console.error(err);
         alert("Claim failed.");
@@ -210,6 +261,7 @@ async function sweepFeesToTreasury() {
         await tx.wait();
         alert("Yield compounded!");
         fetchUserData();
+      fetchVaultTotals();
       } catch (err) {
         console.error(err);
         alert("Compound failed.");
@@ -222,6 +274,7 @@ async function sweepFeesToTreasury() {
         await tx.wait();
         alert("Withdraw complete!");
         fetchUserData();
+      fetchVaultTotals();
       } catch (err) {
         console.error(err);
         alert("Withdraw failed.");
@@ -230,6 +283,38 @@ async function sweepFeesToTreasury() {
   
 
 // DAO contract integration
+async function fetchVaultTotals() {
+  try {
+    const data = await yieldVaultContract.getVaultTotals();
+    const usdc = ethers.formatUnits(data.totalUSDC.toString(), 6);
+    const yieldVal = ethers.formatUnits(data.totalYield.toString(), 6);
+    const shares = data.totalSharesMinted.toString();
+
+    document.getElementById('vaultTotalsContent').innerHTML = 
+      `<p>Total Deposited: $${parseFloat(usdc).toFixed(2)}</p>` +
+      `<p>Total Yield Distributed: $${parseFloat(yieldVal).toFixed(2)}</p>` +
+      `<p>Total Shares Minted: ${shares}</p>`;
+  } catch (err) {
+    console.error('Vault totals error:', err);
+    document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
+  }
+}
+
+async function fundVault() {
+  try {
+    const amount = document.getElementById('fundAmount').value;
+    if (!amount || isNaN(amount)) return alert('Enter a valid number');
+    const amt6 = ethers.parseUnits(amount, 6);
+    const tx = await yieldVaultContract.receiveYield(amt6);
+    await tx.wait();
+    alert('Vault funded!');
+    fetchVaultTotals();
+  } catch (err) {
+    console.error('Funding failed:', err);
+    alert('Funding failed.');
+  }
+}
+
 async function loadVaultStats() {
   try {
     kernelContract = new ethers.Contract(kernelAddress, kernelAbi, provider);
@@ -261,6 +346,12 @@ const kernelAbi = [
 ];
 
 const yieldVaultAbi = [
+  { "name":"getVaultTotals", "type":"function", "inputs":[], "outputs":[
+    {"name":"totalUSDC","type":"uint256"},
+    {"name":"totalSharesMinted","type":"uint256"},
+    {"name":"totalYield","type":"uint256"}
+  ], "stateMutability":"view" },
+  { "name":"receiveYield", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
   { "name":"sweepToTreasury","type":"function","inputs":[{"name":"_amount","type":"uint256"}],"outputs":[],"stateMutability":"nonpayable" },
   { "name":"getVaultBalance","type":"function","inputs":[],"outputs":[{"name":"","type":"uint256"}],"stateMutability":"view" }
 ];
