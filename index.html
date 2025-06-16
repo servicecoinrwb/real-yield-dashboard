@@ -72,6 +72,27 @@
         </div>
 
         <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Capital & Fee Management</h3>
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Fund Kernel (USDC):</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                    <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
+                </div>
+                 <p class="text-xs text-gray-400 mt-1">This action deposits capital directly to the Kernel. First approve, then fund.</p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                     <input id="sweepAmount" type="number" placeholder="USDC Amount (optional)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="sweepFees()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Sweep Fees</button>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Leave amount blank to sweep the full balance.</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Solver & Loan Management</h3>
             <!-- Whitelist Management -->
             <div class="mb-4">
@@ -102,27 +123,6 @@
                     <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay Loan</button>
                 </div>
                  <p class="text-xs text-gray-400 mt-1">For solvers (bots/contractors) to repay the principal loan amount.</p>
-            </div>
-        </div>
-
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Capital & Fee Management</h3>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Fund Kernel (USDC):</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                    <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
-                </div>
-                 <p class="text-xs text-gray-400 mt-1">This action deposits capital directly to the Kernel. First approve, then fund.</p>
-            </div>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                     <input id="sweepAmount" type="number" placeholder="USDC Amount (optional)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="sweepFees()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Sweep Fees</button>
-                </div>
-                <p class="text-xs text-gray-400 mt-1">Leave amount blank to sweep the full balance.</p>
             </div>
         </div>
         
