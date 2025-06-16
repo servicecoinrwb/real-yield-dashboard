@@ -208,8 +208,8 @@
             const info = await investorVaultContract.getInvestorInfo(currentAddress);
             shareAmount = info.share;
             const claimable = ethers.formatUnits(info.claimable, 6);
-            // Correctly display shares with 0 decimals
-            document.getElementById('userShares').textContent = shareAmount.toString();
+            // Correctly display shares with commas for readability
+            document.getElementById('userShares').textContent = shareAmount.toLocaleString();
             document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(4)}`;
         } catch (err) {
             console.error("Error fetching user data:", err);
