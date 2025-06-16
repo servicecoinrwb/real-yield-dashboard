@@ -73,13 +73,13 @@
         <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">DAO Actions</h3>
             <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Fund Kernel via Investor Vault (USDC):</label>
+                <label class="block mb-1 text-sm font-semibold">Fund Kernel (USDC):</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
                     <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve Fund</button>
                     <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
                 </div>
-                 <p class="text-xs text-gray-400 mt-1">First approve, then fund.</p>
+                 <p class="text-xs text-gray-400 mt-1">This action deposits capital directly to the Kernel. First approve, then fund.</p>
             </div>
             <div class="mb-4">
                 <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
@@ -225,10 +225,12 @@
 
     // --- DAO Actions ---
     async function approveFundKernel() {
-        await handleApproval(document.getElementById('kernelAmount').value, addresses.investorVault);
+        // This function approves the KERNEL contract to spend USDC
+        await handleApproval(document.getElementById('kernelAmount').value, addresses.kernel);
     }
     async function fundKernel() {
-        await handleTransaction(investorVaultContract, 'fundKernel', document.getElementById('kernelAmount').value, "Fund Kernel");
+        // This function calls depositCapital on the KERNEL contract
+        await handleTransaction(kernelContract, 'depositCapital', document.getElementById('kernelAmount').value, "Fund Kernel");
     }
     async function sweepFees() {
         const amount = document.getElementById('sweepAmount').value;
