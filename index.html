@@ -193,17 +193,17 @@ async function fundKernel() {
     }
     const amt6 = ethers.parseUnits(amount, 6);
     
-    const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
+    const contract = new ethers.Contract(investorVaultAddress, investorVaultAbi, signer);
     
     try {
       const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-      const allowance = await usdcContract.allowance(currentAddress, kernelAddress);
+      const allowance = await usdcContract.allowance(currentAddress, investorVaultAddress);
       if (allowance < amt6) {
         alert("You must approve USDC before funding Kernel.");
         return;
       }
 
-      console.log("Preparing to fund kernel with:", amt6.toString());
+      console.log("Preparing to fund kernel via InvestorVault with:", amt6.toString());
       const gasEstimate = await contract.fundKernel.estimateGas(amt6).catch(e => {
         console.warn("estimateGas failed", e);
         return null;
@@ -612,17 +612,17 @@ async function fundKernel() {
     }
     const amt6 = ethers.parseUnits(amount, 6);
     
-    const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
+    const contract = new ethers.Contract(investorVaultAddress, investorVaultAbi, signer);
     
     try {
       const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-      const allowance = await usdcContract.allowance(currentAddress, kernelAddress);
+      const allowance = await usdcContract.allowance(currentAddress, investorVaultAddress);
       if (allowance < amt6) {
         alert("You must approve USDC before funding Kernel.");
         return;
       }
 
-      console.log("Preparing to fund kernel with:", amt6.toString());
+      console.log("Preparing to fund kernel via InvestorVault with:", amt6.toString());
       const gasEstimate = await contract.fundKernel.estimateGas(amt6).catch(e => {
         console.warn("estimateGas failed", e);
         return null;
