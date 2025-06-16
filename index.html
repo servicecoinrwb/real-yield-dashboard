@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,234 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Service Coin Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js">
-
-// DAO contract integration
-async function fetchVaultTotals() {
-  try {
-    const [vaultBalance, totalFees] = await Promise.all([
-  yieldVaultContract.getVaultBalance(),
-  yieldVaultContract.getTotalFeesAccumulatedInVault()
-]);
-    const usdc = ethers.formatUnits(BigInt(vaultBalance), 6);
-    const totalYield = ethers.formatUnits(BigInt(totalFees), 6);
-    const shares = 'N/A';
-
-    document.getElementById('vaultTotalsContent').innerHTML = 
-      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` +
-      `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
-  } catch (err) {
-    console.error('Vault totals error:', err);
-    document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
-  }
-}
-
-async function fundVault() {
-  try {
-    const amount = document.getElementById('fundAmount').value;
-    if (!amount || isNaN(amount)) return alert('Enter a valid number');
-    
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      alert("Please enter a valid amount in USDC.");
-      return;
-    }
-    const amt6 = ethers.parseUnits(amount, 6);
-    
-    const tx = await yieldVaultContract.receiveYield(amt6);
-    await tx.wait();
-    alert('Vault funded!');
-    fetchVaultTotals();
-  } catch (err) {
-    console.error('Funding failed:', err);
-    alert('Funding failed.');
-  }
-}
-
-async function loadVaultStats() {
-  try {
-    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, provider);
-    yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, provider);
-
-    const [vaultBalance, kernelBalance] = await Promise.all([
-      yieldVaultContract.getVaultBalance(),
-      kernelContract.getKernelBalance()
-    ]);
-
-    const vault = ethers.formatUnits(BigInt(vaultBalance), 6);
-    const kernel = ethers.formatUnits(BigInt(kernelBalance), 6);
-
-    document.getElementById('vaultStats').innerHTML =
-      `<p class='text-orange-300'>Vault Balance: $${parseFloat(vault).toFixed(2)}</p>` +
-      `<p class='text-yellow-300'>Kernel Balance: $${parseFloat(kernel).toFixed(2)}</p>`;
-  } catch (e) {
-    console.warn('Failed to load vault/kernel stats', e);
-  }
-}
-
-const kernelAddress = '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1';
-const yieldVaultAddress = '0x44D64E1B9dC5F90b389900Da24B8de631222432C';
-
-const kernelAbi = [
-  { "name":"batchClaimYield","type":"function","inputs":[{"name":"investors","type":"address[]"}],"outputs":[],"stateMutability":"nonpayable" },
-  { "name":"batchWithdraw","type":"function","inputs":[{"name":"investors","type":"address[]"}],"outputs":[],"stateMutability":"nonpayable" },
-  { "name":"getKernelBalance","type":"function","inputs":[],"outputs":[{"name":"","type":"uint256"}],"stateMutability":"view" }
-];
-
-const yieldVaultAbi = [
-  { "name":"getVaultTotals", "type":"function", "inputs":[], "outputs":[
-    {"name":"totalUSDC","type":"uint256"},
-    {"name":"totalSharesMinted","type":"uint256"},
-    {"name":"totalYield","type":"uint256"}
-  ], "stateMutability":"view" },
-  { "name":"receiveYield", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
-  { "name":"sweepToTreasury","type":"function","inputs":[{"name":"_amount","type":"uint256"}],"outputs":[],"stateMutability":"nonpayable" },
-  { "name":"getVaultBalance","type":"function","inputs":[],"outputs":[{"name":"","type":"uint256"}],"stateMutability":"view" }
-];
-
-let kernelContract, yieldVaultContract;
-
-async function daoBatchClaim() {
-  try {
-    if (!currentAddress) return alert("Connect wallet first.");
-    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
-    const tx = await kernelContract.batchClaimYield(investors);
-    await tx.wait();
-    alert("Batch claim successful.");
-  } catch (err) {
-    console.error(err);
-    alert("Batch claim failed.");
-  }
-}
-
-async function daoBatchWithdraw() {
-  try {
-    if (!currentAddress) return alert("Connect wallet first.");
-    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
-    const tx = await kernelContract.batchWithdraw(investors);
-    await tx.wait();
-    alert("Batch withdraw successful.");
-  } catch (err) {
-    console.error(err);
-    alert("Batch withdraw failed.");
-  }
-}
-
-async function sweepFeesToTreasury() {
-  try {
-    yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, signer);
-    const vaultBalance = await yieldVaultContract.getVaultBalance();
-    const tx = await yieldVaultContract.sweepToTreasury(vaultBalance);
-    await tx.wait();
-    alert("Fees swept to treasury.");
-  } catch (err) {
-    console.error(err);
-    alert("Sweep failed.");
-  }
-}
-
-// DAO: Approve and fund USDC to Kernel
-async function updateUSDCStatus() {
-  try {
-    const usdc = new ethers.Contract(usdcTokenAddress, usdcAbi, provider);
-    const balance = await usdc.balanceOf(currentAddress);
-    const allowance = await usdc.allowance(currentAddress, kernelAddress);
-    const bal = ethers.formatUnits(balance, 6);
-    const allow = ethers.formatUnits(allowance, 6);
-
-    document.getElementById('usdcStatus').innerHTML =
-      `<p>USDC Balance: $${parseFloat(bal).toFixed(2)}</p>` +
-      `<p>Kernel Allowance: $${parseFloat(allow).toFixed(2)}</p>`;
-  } catch (e) {
-    console.warn("USDC status error", e);
-    document.getElementById('usdcStatus').textContent = "Error loading USDC status";
-  }
-}
-
-const usdcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; // USDC on Arbitrum
-const usdcAbi = [
-  { "name":"approve", "type":"function", "inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}], "outputs":[{"name":"","type":"bool"}], "stateMutability":"nonpayable" },
-  { "name":"allowance", "type":"function", "inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
-  { "name":"balanceOf", "type":"function", "inputs":[{"name":"owner","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
-];
-
-const kernelAbiExtra = [
-  { "name":"fundKernel", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" }
-];
-
-async function approveKernel() {
-  try {
-    const amount = document.getElementById('kernelAmount').value;
-    if (!amount) return alert("Enter amount");
-    const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-    
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      alert("Please enter a valid amount in USDC.");
-      return;
-    }
-    const amt6 = ethers.parseUnits(amount, 6);
-    
-    const tx = await usdcContract.approve(kernelAddress, amt6);
-    await tx.wait();
-    alert("USDC approved for Kernel");
-  } catch (e) {
-    console.error("Approve failed", e);
-    alert("Approval failed.");
-  }
-}
-
-async function fundKernel() {
-  try {
-    const amount = document.getElementById('kernelAmount').value;
-    
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      alert("Please enter a valid amount in USDC.");
-      return;
-    }
-    const amt6 = ethers.parseUnits(amount, 6);
-    
-    const contract = new ethers.Contract(investorVaultAddress, investorVaultAbi, signer);
-    
-    try {
-      const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-      const allowance = await usdcContract.allowance(currentAddress, investorVaultAddress);
-      if (allowance < amt6) {
-        alert("You must approve USDC before funding Kernel.");
-        return;
-      }
-
-      console.log("Preparing to fund kernel via InvestorVault with:", amt6.toString());
-      const gasEstimate = await contract.fundKernel.estimateGas(amt6).catch(e => {
-        console.warn("estimateGas failed", e);
-        return null;
-      });
-      if (!gasEstimate) {
-        alert("Gas estimate failed. Check input or permissions.");
-        return;
-      }
-
-      const tx = await contract.fundKernel(amt6);
-      console.log("TX sent:", tx.hash);
-      await tx.wait();
-      alert("Kernel funded");
-    } catch (e) {
-      console.error("Final fundKernel TX failed:", e);
-      alert("Funding failed: " + e.message);
-    }
-    
-    await tx.wait();
-    alert("Kernel funded");
-    loadVaultStats();
-  } catch (err) {
-    console.error("Funding kernel failed", err);
-    alert("Kernel fund failed.");
-  }
-}
-</script>
-
-
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 </head>
+
 <body class="bg-black text-white font-sans">
   <div class="max-w-2xl mx-auto p-6 text-center">
     <h1 class="text-3xl font-bold text-orange-400 mb-4">Service Coin Real Yield Dashboard</h1>
@@ -255,406 +29,337 @@ async function fundKernel() {
       </div>
     </div>
 
-    <div id="daoTools" class="hidden mt-8 border-t border-orange-400 pt-4">
-  <div id="vaultStats" class="text-sm text-left mb-4"></div>
-<div class="text-left mb-4">
-  <h3 class="text-lg font-semibold text-orange-300 mb-2">DAO Mode</h3>
-  <label class="inline-flex items-center gap-2 mb-2">
-    <input type="checkbox" id="daoOverride" class="form-checkbox h-4 w-4 text-orange-600">
-    <span>Enable DAO tools for this wallet (testing)</span>
-  </label>
-  <div class="text-sm mt-2 text-gray-300" id="usdcStatus">Checking USDC balance...
-<div class="mt-8 text-left border-t border-gray-700 pt-4">
-  <h3 class="text-lg font-semibold text-orange-300 mb-2">📜 Transaction Log (Kernel + Vault)</h3>
-  <ul id="eventLog" class="text-sm text-gray-400 space-y-1"></ul>
-</div>
-</div>
-</div>
+    <div id="daoTools" class="hidden mt-8 border-t border-orange-400 pt-4 text-left">
+        <h2 class="text-xl font-semibold text-orange-300 mb-4 text-center">DAO Tools</h2>
 
-<div class="text-left mb-4">
-  <label class="block mb-1 text-sm">Fund Kernel (USDC):</label>
-  <input id="kernelAmount" type="number" placeholder="Amount in USDC" class="text-black w-full p-2 rounded mb-2" />
-  <div class="flex gap-2">
-    <button onclick="approveKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded">Approve USDC</button>
-    <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Fund Kernel</button>
-  
-<div class="mt-8 text-left border-t border-gray-700 pt-4">
-  <h3 class="text-lg font-semibold text-orange-300 mb-2">📜 Transaction Log (Kernel + Vault)</h3>
-  <ul id="eventLog" class="text-sm text-gray-400 space-y-1"></ul>
-</div>
-</div>
-</div>
-<div id="vaultTotals" class="text-left text-sm text-gray-300 mb-4 p-2 border border-gray-700 rounded">
-  <h3 class="text-orange-300 font-semibold mb-2">Vault Totals</h3>
-  <div id="vaultTotalsContent">Loading...
-<div class="mt-8 text-left border-t border-gray-700 pt-4">
-  <h3 class="text-lg font-semibold text-orange-300 mb-2">📜 Transaction Log (Kernel + Vault)</h3>
-  <ul id="eventLog" class="text-sm text-gray-400 space-y-1"></ul>
-</div>
-</div>
-</div>
-<div class="text-left mb-4">
-  <label class="block mb-1 text-sm">Fund Yield (USDC):</label>
-  <input id="fundAmount" type="number" placeholder="Amount in USDC" class="text-black w-full p-2 rounded" />
-  <button onclick="fundVault()" class="mt-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded">Fund Vault</button>
-</div>
-      <h2 class="text-xl font-semibold text-orange-300 mb-2">DAO Tools</h2>
-      <p class="text-sm text-gray-400 mb-4">DAO-only functions appear here (batchClaim, batchWithdraw)</p>
-<div class="mb-4">
-  <textarea id="batchAddresses" placeholder="Enter investor addresses (comma-separated)" class="w-full p-2 text-black rounded mb-2"></textarea>
-</div>
-<div class="space-x-3">
-  <button onclick="daoBatchClaim()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded">Batch Claim</button>
-  <button onclick="daoBatchWithdraw()" class="bg-red-700 hover:bg-red-800 px-4 py-2 rounded">Batch Withdraw</button>
-  <button onclick="sweepFeesToTreasury()" class="bg-yellow-700 hover:bg-yellow-800 px-4 py-2 rounded">Sweep Fees</button>
-</div>
+        <div id="vaultStats" class="text-sm text-center mb-4"></div>
+
+        <div class="mb-4 p-3 border border-gray-700 rounded">
+          <h3 class="text-lg font-semibold text-orange-300 mb-2">DAO Mode</h3>
+          <label class="inline-flex items-center gap-2 mb-2">
+            <input type="checkbox" id="daoOverride" class="form-checkbox h-4 w-4 text-orange-600">
+            <span>Enable DAO tools for this wallet (testing)</span>
+          </label>
+          <div class="text-sm mt-2 text-gray-300" id="usdcStatus">Checking USDC balance...</div>
+        </div>
+
+        <div class="mb-4 p-3 border border-gray-700 rounded">
+            <h3 class="text-lg font-semibold text-orange-300 mb-2">Fund Kernel</h3>
+            <label class="block mb-1 text-sm">Amount (USDC):</label>
+            <input id="kernelAmount" type="number" placeholder="0.0" class="text-black w-full p-2 rounded mb-2" />
+            <div class="flex gap-2">
+              <button onclick="approveKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded w-1/2">Approve USDC</button>
+              <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded w-1/2">Fund Kernel</button>
+            </div>
+        </div>
+        
+        <div id="vaultTotals" class="text-sm text-gray-300 mb-4 p-3 border border-gray-700 rounded">
+            <h3 class="text-orange-300 font-semibold mb-2">Vault Totals</h3>
+            <div id="vaultTotalsContent">Loading...</div>
+        </div>
+
+        <div class="mb-4 p-3 border border-gray-700 rounded">
+            <h3 class="text-lg font-semibold text-orange-300 mb-2">Fund Yield Vault</h3>
+            <label class="block mb-1 text-sm">Amount (USDC):</label>
+            <input id="fundAmount" type="number" placeholder="0.0" class="text-black w-full p-2 rounded" />
+            <button onclick="fundVault()" class="mt-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded w-full">Fund Vault</button>
+        </div>
+
+        <div class="mb-4 p-3 border border-gray-700 rounded">
+            <h3 class="text-lg font-semibold text-orange-300 mb-2">Batch Operations</h3>
+            <p class="text-sm text-gray-400 mb-4">DAO-only functions (batchClaim, batchWithdraw)</p>
+            <textarea id="batchAddresses" placeholder="Enter investor addresses (comma-separated)" class="w-full p-2 text-black rounded mb-2"></textarea>
+            <div class="space-x-3">
+              <button onclick="daoBatchClaim()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded">Batch Claim</button>
+              <button onclick="daoBatchWithdraw()" class="bg-red-700 hover:bg-red-800 px-4 py-2 rounded">Batch Withdraw</button>
+              <button onclick="sweepFeesToTreasury()" class="bg-yellow-700 hover:bg-yellow-800 px-4 py-2 rounded">Sweep Fees</button>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-left border-t border-gray-700 pt-4">
+            <h3 class="text-lg font-semibold text-orange-300 mb-2">📜 Transaction Log (Kernel + Vault)</h3>
+            <ul id="eventLog" class="text-sm text-gray-400 space-y-1 h-32 overflow-y-auto"></ul>
+        </div>
     </div>
   </div>
 
-  <script>
-const investorVaultAbi = [
-  {
-    name: "fundKernel",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "amount", type: "uint256" }],
-    outputs: []
-  }
-];
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    let signer, contract;
-    const investorVaultAddress = '0x1a51f1966d35661573908DC913307076d937aa90';
-    const daoWallet = '0xcfe077e6f7554B1724546E02624a0832D1f4557a';
+<script>
+    // --- Global Variables & Constants ---
+    let provider, signer, contract, kernelContract, yieldVaultContract;
     let currentAddress;
     let shareAmount = 0;
 
-    const abi = [
-      {
-        "inputs": [{"internalType":"address","name":"investor","type":"address"}],
-        "name":"getInvestorInfo",
-        "outputs":[
-          {"internalType":"uint256","name":"share","type":"uint256"},
-          {"internalType":"uint256","name":"claimable","type":"uint256"},
-          {"internalType":"uint256","name":"claimed","type":"uint256"},
-          {"internalType":"uint256","name":"unlockTime","type":"uint256"}
-        ],
-        "stateMutability":"view",
-        "type":"function"
-      },
-      { "name":"claimYield","type":"function","inputs":[],"outputs":[],"stateMutability":"nonpayable" },
-      { "name":"compoundYield","type":"function","inputs":[],"outputs":[],"stateMutability":"nonpayable" },
-      {
-        "name":"withdraw",
-        "type":"function",
-        "inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}],
-        "outputs":[],"stateMutability":"nonpayable"
-      },
+    const investorVaultAddress = '0x1a51f1966d35661573908DC913307076d937aa90';
+    const kernelAddress = '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1';
+    const yieldVaultAddress = '0x44D64E1B9dC5F90b389900Da24B8de631222432C';
+    const usdcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; // USDC on Arbitrum
+    const daoWallet = '0xcfe077e6f7554B1724546E02624a0832D1f4557a';
+
+    // --- ABIs (Application Binary Interfaces) ---
+    const investorVaultAbi = [
+        { "inputs": [{"internalType":"address","name":"investor","type":"address"}], "name":"getInvestorInfo", "outputs":[ {"internalType":"uint256","name":"share","type":"uint256"}, {"internalType":"uint256","name":"claimable","type":"uint256"}, {"internalType":"uint256","name":"claimed","type":"uint256"}, {"internalType":"uint256","name":"unlockTime","type":"uint256"} ], "stateMutability":"view", "type":"function" },
+        { "name":"claimYield", "type":"function", "inputs":[], "outputs":[], "stateMutability":"nonpayable" },
+        { "name":"compoundYield", "type":"function", "inputs":[], "outputs":[], "stateMutability":"nonpayable" },
+        { "name":"withdraw", "type":"function", "inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
+        { "name": "fundKernel", "type": "function", "stateMutability": "nonpayable", "inputs": [{ "name": "amount", "type": "uint256" }], "outputs": [] }
     ];
 
+    const kernelAbi = [
+        { "name":"batchClaimYield", "type":"function", "inputs":[{"name":"investors","type":"address[]"}], "outputs":[], "stateMutability":"nonpayable" },
+        { "name":"batchWithdraw", "type":"function", "inputs":[{"name":"investors","type":"address[]"}], "outputs":[], "stateMutability":"nonpayable" },
+        { "name":"getKernelBalance", "type":"function", "inputs":[], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
+        { "name":"fundKernel", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" }
+    ];
+
+    const yieldVaultAbi = [
+        { "name":"getVaultTotals", "type":"function", "inputs":[], "outputs":[ {"name":"totalUSDC","type":"uint256"}, {"name":"totalSharesMinted","type":"uint256"}, {"name":"totalYield","type":"uint256"} ], "stateMutability":"view" },
+        { "name":"receiveYield", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
+        { "name":"sweepToTreasury", "type":"function", "inputs":[{"name":"_amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
+        { "name":"getVaultBalance", "type":"function", "inputs":[], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
+    ];
+
+    const usdcAbi = [
+        { "name":"approve", "type":"function", "inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}], "outputs":[{"name":"","type":"bool"}], "stateMutability":"nonpayable" },
+        { "name":"allowance", "type":"function", "inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
+        { "name":"balanceOf", "type":"function", "inputs":[{"name":"owner","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
+    ];
+
+    // --- Wallet and User Functions ---
     async function connectWallet() {
-      if (!window.ethereum) return alert("Please install MetaMask.");
+        if (!window.ethereum) return alert("Please install MetaMask.");
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        currentAddress = await signer.getAddress();
+        
+        contract = new ethers.Contract(investorVaultAddress, investorVaultAbi, signer);
 
-      signer = await provider.getSigner();
-      currentAddress = await signer.getAddress();
-      contract = new ethers.Contract(investorVaultAddress, abi, signer);
+        document.getElementById('walletStatus').innerHTML = `<p class="text-green-400">Connected: ${currentAddress}</p>`;
+        document.getElementById('walletAddress').textContent = currentAddress;
+        document.getElementById('userInfo').classList.remove('hidden');
 
-      document.getElementById('walletStatus').innerHTML =
-        '<p class="text-green-400">Connected: ' + currentAddress + '</p>';
-      document.getElementById('walletAddress').textContent = currentAddress;
-      document.getElementById('userInfo').classList.remove('hidden');
-
-      if (document.getElementById('daoOverride').checked || currentAddress.toLowerCase() === daoWallet.toLowerCase()) {
-        document.getElementById('daoTools').classList.remove('hidden');
-      loadVaultStats();
-      updateUSDCStatus();
-      }
-
-      fetchUserData();
-      fetchVaultTotals();
+        if (document.getElementById('daoOverride').checked || currentAddress.toLowerCase() === daoWallet.toLowerCase()) {
+            document.getElementById('daoTools').classList.remove('hidden');
+            initializeDaoContracts();
+            loadAllDaoData();
+        }
+        fetchUserData();
     }
 
     async function fetchUserData() {
-      try {
-        const info = await contract.getInvestorInfo(currentAddress);
-        shareAmount = info.share;
+        try {
+            const info = await contract.getInvestorInfo(currentAddress);
+            shareAmount = info.share;
+            const claimable = ethers.formatUnits(info.claimable, 6);
 
-        console.log("Investor Info:", info);
-document.getElementById('userShares').textContent = info.share.toString();
-document.getElementById('claimableYield').textContent = "$" + parseFloat(ethers.formatUnits(info.claimable.toString(), 6)).toFixed(2);
-
-        document.getElementById('userShares').textContent = shareAmount;
-        const claimable = ethers.formatUnits(BigInt(info.claimable), 6);
-        document.getElementById('claimableYield').textContent = "$" + parseFloat(claimable).toFixed(2);
-      } catch (err) {
-        console.error("Error fetching investor info:", err);
-        document.getElementById('claimableYield').textContent = "Error";
-      }
+            document.getElementById('userShares').textContent = ethers.formatUnits(shareAmount, 6); // Assuming shares have decimals
+            document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(2)}`;
+        } catch (err) {
+            console.error("Error fetching investor info:", err);
+            document.getElementById('claimableYield').textContent = "Error";
+        }
     }
 
     async function claimYield() {
-      try {
-        const tx = await contract.claimYield();
-        await tx.wait();
-        alert("Yield claimed!");
-        fetchUserData();
-      fetchVaultTotals();
-      } catch (err) {
-        console.error(err);
-        alert("Claim failed.");
-      }
+        try {
+            const tx = await contract.claimYield();
+            await tx.wait();
+            alert("Yield claimed!");
+            fetchUserData();
+            loadAllDaoData();
+        } catch (err) {
+            console.error(err);
+            alert("Claim failed.");
+        }
     }
 
     async function compoundYield() {
-      try {
-        const tx = await contract.compoundYield();
-        await tx.wait();
-        alert("Yield compounded!");
-        fetchUserData();
-      fetchVaultTotals();
-      } catch (err) {
-        console.error(err);
-        alert("Compound failed.");
-      }
+        try {
+            const tx = await contract.compoundYield();
+            await tx.wait();
+            alert("Yield compounded!");
+            fetchUserData();
+            loadAllDaoData();
+        } catch (err) {
+            console.error(err);
+            alert("Compound failed.");
+        }
     }
 
     async function withdraw() {
-      try {
-        const tx = await contract.withdraw(shareAmount);
-        await tx.wait();
-        alert("Withdraw complete!");
-        fetchUserData();
-      fetchVaultTotals();
-      } catch (err) {
-        console.error(err);
-        alert("Withdraw failed.");
-      }
+        try {
+            const tx = await contract.withdraw(shareAmount);
+            await tx.wait();
+            alert("Withdraw complete!");
+            fetchUserData();
+            loadAllDaoData();
+        } catch (err) {
+            console.error(err);
+            alert("Withdraw failed.");
+        }
     }
-  
 
-// DAO contract integration
-async function fetchVaultTotals() {
-  try {
-    const [vaultBalance, totalFees] = await Promise.all([
-  yieldVaultContract.getVaultBalance(),
-  yieldVaultContract.totalFeesAccumulatedInVault()
-]);
-    const usdc = ethers.formatUnits(BigInt(vaultBalance), 6);
-    const totalYield = ethers.formatUnits(BigInt(totalFees), 6);
-    const shares = 'N/A';
-
-    document.getElementById('vaultTotalsContent').innerHTML = 
-      `<p>Vault Balance: $${parseFloat(usdc).toFixed(2)}</p>` +
-      `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
-  } catch (err) {
-    console.error('Vault totals error:', err);
-    document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
-  }
-}
-
-async function fundVault() {
-  try {
-    const amount = document.getElementById('fundAmount').value;
-    if (!amount || isNaN(amount)) return alert('Enter a valid number');
-    
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      alert("Please enter a valid amount in USDC.");
-      return;
+    // --- DAO Functions ---
+    function initializeDaoContracts() {
+        kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
+        yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, signer);
     }
-    const amt6 = ethers.parseUnits(amount, 6);
-    
-    const tx = await yieldVaultContract.receiveYield(amt6);
-    await tx.wait();
-    alert('Vault funded!');
-    fetchVaultTotals();
-  } catch (err) {
-    console.error('Funding failed:', err);
-    alert('Funding failed.');
-  }
-}
 
-async function loadVaultStats() {
-  try {
-    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, provider);
-    yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, provider);
-
-    const [vaultBalance, kernelBalance] = await Promise.all([
-      yieldVaultContract.getVaultBalance(),
-      kernelContract.getKernelBalance()
-    ]);
-
-    const vault = ethers.formatUnits(BigInt(vaultBalance), 6);
-    const kernel = ethers.formatUnits(BigInt(kernelBalance), 6);
-
-    document.getElementById('vaultStats').innerHTML =
-      `<p class='text-orange-300'>Vault Balance: $${parseFloat(vault).toFixed(2)}</p>` +
-      `<p class='text-yellow-300'>Kernel Balance: $${parseFloat(kernel).toFixed(2)}</p>`;
-  } catch (e) {
-    console.warn('Failed to load vault/kernel stats', e);
-  }
-}
-
-const kernelAddress = '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1';
-const yieldVaultAddress = '0x44D64E1B9dC5F90b389900Da24B8de631222432C';
-
-const kernelAbi = [
-  { "name":"batchClaimYield","type":"function","inputs":[{"name":"investors","type":"address[]"}],"outputs":[],"stateMutability":"nonpayable" },
-  { "name":"batchWithdraw","type":"function","inputs":[{"name":"investors","type":"address[]"}],"outputs":[],"stateMutability":"nonpayable" },
-  { "name":"getKernelBalance","type":"function","inputs":[],"outputs":[{"name":"","type":"uint256"}],"stateMutability":"view" }
-];
-
-const yieldVaultAbi = [
-  { "name":"getVaultTotals", "type":"function", "inputs":[], "outputs":[
-    {"name":"totalUSDC","type":"uint256"},
-    {"name":"totalSharesMinted","type":"uint256"},
-    {"name":"totalYield","type":"uint256"}
-  ], "stateMutability":"view" },
-  { "name":"receiveYield", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" },
-  { "name":"sweepToTreasury","type":"function","inputs":[{"name":"_amount","type":"uint256"}],"outputs":[],"stateMutability":"nonpayable" },
-  { "name":"getVaultBalance","type":"function","inputs":[],"outputs":[{"name":"","type":"uint256"}],"stateMutability":"view" }
-];
-
-let kernelContract, yieldVaultContract;
-
-async function daoBatchClaim() {
-  try {
-    if (!currentAddress) return alert("Connect wallet first.");
-    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
-    const tx = await kernelContract.batchClaimYield(investors);
-    await tx.wait();
-    alert("Batch claim successful.");
-  } catch (err) {
-    console.error(err);
-    alert("Batch claim failed.");
-  }
-}
-
-async function daoBatchWithdraw() {
-  try {
-    if (!currentAddress) return alert("Connect wallet first.");
-    kernelContract = new ethers.Contract(kernelAddress, kernelAbi, signer);
-    const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
-    const tx = await kernelContract.batchWithdraw(investors);
-    await tx.wait();
-    alert("Batch withdraw successful.");
-  } catch (err) {
-    console.error(err);
-    alert("Batch withdraw failed.");
-  }
-}
-
-async function sweepFeesToTreasury() {
-  try {
-    yieldVaultContract = new ethers.Contract(yieldVaultAddress, yieldVaultAbi, signer);
-    const vaultBalance = await yieldVaultContract.getVaultBalance();
-    const tx = await yieldVaultContract.sweepToTreasury(vaultBalance);
-    await tx.wait();
-    alert("Fees swept to treasury.");
-  } catch (err) {
-    console.error(err);
-    alert("Sweep failed.");
-  }
-}
-
-// DAO: Approve and fund USDC to Kernel
-async function updateUSDCStatus() {
-  try {
-    const usdc = new ethers.Contract(usdcTokenAddress, usdcAbi, provider);
-    const balance = await usdc.balanceOf(currentAddress);
-    const allowance = await usdc.allowance(currentAddress, kernelAddress);
-    const bal = ethers.formatUnits(balance, 6);
-    const allow = ethers.formatUnits(allowance, 6);
-
-    document.getElementById('usdcStatus').innerHTML =
-      `<p>USDC Balance: $${parseFloat(bal).toFixed(2)}</p>` +
-      `<p>Kernel Allowance: $${parseFloat(allow).toFixed(2)}</p>`;
-  } catch (e) {
-    console.warn("USDC status error", e);
-    document.getElementById('usdcStatus').textContent = "Error loading USDC status";
-  }
-}
-
-const usdcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; // USDC on Arbitrum
-const usdcAbi = [
-  { "name":"approve", "type":"function", "inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}], "outputs":[{"name":"","type":"bool"}], "stateMutability":"nonpayable" },
-  { "name":"allowance", "type":"function", "inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
-  { "name":"balanceOf", "type":"function", "inputs":[{"name":"owner","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
-];
-
-const kernelAbiExtra = [
-  { "name":"fundKernel", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" }
-];
-
-async function approveKernel() {
-  try {
-    const amount = document.getElementById('kernelAmount').value;
-    if (!amount) return alert("Enter amount");
-    const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-    
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      alert("Please enter a valid amount in USDC.");
-      return;
+    function loadAllDaoData(){
+        if(kernelContract && yieldVaultContract) {
+            loadVaultStats();
+            fetchVaultTotals();
+            updateUSDCStatus();
+        }
     }
-    const amt6 = ethers.parseUnits(amount, 6);
-    
-    const tx = await usdcContract.approve(kernelAddress, amt6);
-    await tx.wait();
-    alert("USDC approved for Kernel");
-  } catch (e) {
-    console.error("Approve failed", e);
-    alert("Approval failed.");
-  }
-}
 
-async function fundKernel() {
-  try {
-    const amount = document.getElementById('kernelAmount').value;
-    
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
-      alert("Please enter a valid amount in USDC.");
-      return;
+    async function fetchVaultTotals() {
+        try {
+            const totals = await yieldVaultContract.getVaultTotals();
+            const balance = await yieldVaultContract.getVaultBalance();
+            const formattedBalance = ethers.formatUnits(balance, 6);
+            const totalYield = ethers.formatUnits(totals.totalYield, 6);
+
+            document.getElementById('vaultTotalsContent').innerHTML =
+                `<p>Vault Balance: $${parseFloat(formattedBalance).toFixed(2)}</p>` +
+                `<p>Fees Accumulated: $${parseFloat(totalYield).toFixed(2)}</p>`;
+        } catch (err) {
+            console.error('Vault totals error:', err);
+            document.getElementById('vaultTotalsContent').textContent = 'Error loading totals.';
+        }
     }
-    const amt6 = ethers.parseUnits(amount, 6);
-    
-    const contract = new ethers.Contract(investorVaultAddress, investorVaultAbi, signer);
-    
-    try {
-      const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
-      const allowance = await usdcContract.allowance(currentAddress, investorVaultAddress);
-      if (allowance < amt6) {
-        alert("You must approve USDC before funding Kernel.");
-        return;
-      }
 
-      console.log("Preparing to fund kernel via InvestorVault with:", amt6.toString());
-      const gasEstimate = await contract.fundKernel.estimateGas(amt6).catch(e => {
-        console.warn("estimateGas failed", e);
-        return null;
-      });
-      if (!gasEstimate) {
-        alert("Gas estimate failed. Check input or permissions.");
-        return;
-      }
+    async function fundVault() {
+        try {
+            const amount = document.getElementById('fundAmount').value;
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
+                return alert("Please enter a valid amount in USDC.");
+            }
+            const amt6 = ethers.parseUnits(amount, 6);
+            const tx = await yieldVaultContract.receiveYield(amt6);
+            await tx.wait();
+            alert('Vault funded!');
+            loadAllDaoData();
+        } catch (err) {
+            console.error('Funding failed:', err);
+            alert('Funding failed.');
+        }
+    }
 
-      const tx = await contract.fundKernel(amt6);
-      console.log("TX sent:", tx.hash);
-      await tx.wait();
-      alert("Kernel funded");
-    } catch (e) {
-      console.error("Final fundKernel TX failed:", e);
-      alert("Funding failed: " + e.message);
+    async function loadVaultStats() {
+        try {
+            const [vaultBalance, kernelBalance] = await Promise.all([
+                yieldVaultContract.getVaultBalance(),
+                kernelContract.getKernelBalance()
+            ]);
+            const vault = ethers.formatUnits(vaultBalance, 6);
+            const kernel = ethers.formatUnits(kernelBalance, 6);
+
+            document.getElementById('vaultStats').innerHTML =
+                `<p class='text-orange-300'>Vault Balance: $${parseFloat(vault).toFixed(2)}</p>` +
+                `<p class='text-yellow-300'>Kernel Balance: $${parseFloat(kernel).toFixed(2)}</p>`;
+        } catch (e) {
+            console.warn('Failed to load vault/kernel stats', e);
+        }
+    }
+
+    async function daoBatchClaim() {
+        try {
+            const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
+            const tx = await kernelContract.batchClaimYield(investors);
+            await tx.wait();
+            alert("Batch claim successful.");
+        } catch (err) {
+            console.error(err);
+            alert("Batch claim failed.");
+        }
+    }
+
+    async function daoBatchWithdraw() {
+        try {
+            const investors = document.getElementById('batchAddresses').value.split(',').map(a => a.trim());
+            const tx = await kernelContract.batchWithdraw(investors);
+            await tx.wait();
+            alert("Batch withdraw successful.");
+        } catch (err) {
+            console.error(err);
+            alert("Batch withdraw failed.");
+        }
+    }
+
+    async function sweepFeesToTreasury() {
+        try {
+            const vaultBalance = await yieldVaultContract.getVaultBalance();
+            const tx = await yieldVaultContract.sweepToTreasury(vaultBalance);
+            await tx.wait();
+            alert("Fees swept to treasury.");
+            loadAllDaoData();
+        } catch (err) {
+            console.error(err);
+            alert("Sweep failed.");
+        }
     }
     
-    await tx.wait();
-    alert("Kernel funded");
-    loadVaultStats();
-  } catch (err) {
-    console.error("Funding kernel failed", err);
-    alert("Kernel fund failed.");
-  }
-}
+    async function updateUSDCStatus() {
+        try {
+            const usdc = new ethers.Contract(usdcTokenAddress, usdcAbi, provider);
+            const balance = await usdc.balanceOf(currentAddress);
+            const allowance = await usdc.allowance(currentAddress, investorVaultAddress); // Allowance for InvestorVault
+            const bal = ethers.formatUnits(balance, 6);
+            const allow = ethers.formatUnits(allowance, 6);
+
+            document.getElementById('usdcStatus').innerHTML =
+                `<p>Your USDC Balance: $${parseFloat(bal).toFixed(2)}</p>` +
+                `<p>Kernel (via Vault) Allowance: $${parseFloat(allow).toFixed(2)}</p>`;
+        } catch (e) {
+            console.warn("USDC status error", e);
+            document.getElementById('usdcStatus').textContent = "Error loading USDC status";
+        }
+    }
+
+    async function approveKernel() {
+        try {
+            const amount = document.getElementById('kernelAmount').value;
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
+                return alert("Please enter a valid amount to approve.");
+            }
+            const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
+            const amt6 = ethers.parseUnits(amount, 6);
+            const tx = await usdcContract.approve(investorVaultAddress, amt6); // Approve the InvestorVault
+            await tx.wait();
+            alert("USDC approved for Investor Vault to fund Kernel");
+            updateUSDCStatus();
+        } catch (e) {
+            console.error("Approve failed", e);
+            alert("Approval failed.");
+        }
+    }
+
+    async function fundKernel() {
+        try {
+            const amount = document.getElementById('kernelAmount').value;
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
+                return alert("Please enter a valid amount in USDC.");
+            }
+            const amt6 = ethers.parseUnits(amount, 6);
+            
+            // Check allowance first
+            const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, provider);
+            const allowance = await usdcContract.allowance(currentAddress, investorVaultAddress);
+            if (allowance < amt6) {
+                return alert("You must approve a sufficient amount of USDC before funding.");
+            }
+
+            // The main contract 'contract' is the InvestorVault which has fundKernel
+            const tx = await contract.fundKernel(amt6);
+            await tx.wait();
+            alert("Kernel funded successfully!");
+            loadAllDaoData();
+        } catch (err) {
+            console.error("Funding kernel failed", err);
+            alert("Kernel fund failed: " + err.message);
+        }
+    }
 </script>
-
 
 </body>
 </html>
