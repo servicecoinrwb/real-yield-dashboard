@@ -63,10 +63,11 @@
         <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">System Stats</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-md">
-                <p>Kernel Balance: <span id="kernelBalance" class="font-bold text-yellow-300">...</span></p>
-                <p>Yield Vault Balance: <span id="yieldVaultBalance" class="font-bold text-purple-300">...</span></p>
-                <p>Investor Vault Balance: <span id="investorVaultBalance" class="font-bold text-blue-300">...</span></p>
-                <p>Total Fees in Yield Vault: <span id="yieldVaultTotalFees" class="font-bold text-purple-300">...</span></p>
+                <p>Kernel Balance (Live): <span id="kernelBalance" class="font-bold text-yellow-300">...</span></p>
+                <p>Investor Vault Balance (Live): <span id="investorVaultBalance" class="font-bold text-blue-300">...</span></p>
+                <p>Total Capital Deposited (All-Time): <span id="investorVaultTotalDeposits" class="font-bold text-blue-300">...</span></p>
+                <p>Yield Vault Balance (Live): <span id="yieldVaultBalance" class="font-bold text-purple-300">...</span></p>
+                <p>Total Fees Processed (All-Time): <span id="yieldVaultTotalFees" class="font-bold text-purple-300">...</span></p>
             </div>
         </div>
 
@@ -188,16 +189,18 @@
 
     async function fetchAllDaoData() {
         try {
-            const [kernelBal, yieldVaultBal, yieldVaultFees, investorVaultBal] = await Promise.all([
+            const [kernelBal, yieldVaultBal, yieldVaultFees, investorVaultBal, investorVaultTotals] = await Promise.all([
                 kernelContract.getKernelBalance(),
                 yieldVaultContract.getVaultBalance(),
                 yieldVaultContract.getTotalFeesAccumulatedInVault(),
-                usdcContract.balanceOf(addresses.investorVault) 
+                usdcContract.balanceOf(addresses.investorVault), 
+                investorVaultContract.getVaultTotals()
             ]);
             document.getElementById('kernelBalance').textContent = `$${parseFloat(ethers.formatUnits(kernelBal, 6)).toFixed(2)}`;
             document.getElementById('yieldVaultBalance').textContent = `$${parseFloat(ethers.formatUnits(yieldVaultBal, 6)).toFixed(2)}`;
             document.getElementById('yieldVaultTotalFees').textContent = `$${parseFloat(ethers.formatUnits(yieldVaultFees, 6)).toFixed(2)}`;
             document.getElementById('investorVaultBalance').textContent = `$${parseFloat(ethers.formatUnits(investorVaultBal, 6)).toFixed(2)}`;
+            document.getElementById('investorVaultTotalDeposits').textContent = `$${parseFloat(ethers.formatUnits(investorVaultTotals.totalUSDC, 6)).toFixed(2)}`;
         } catch (err) {
             console.error('Error fetching DAO data:', err);
             showModal("DAO Data Error", "Could not fetch all DAO statistics.");
@@ -383,4 +386,4 @@
 </script>
 
 </body>
-</ht
+</html>
