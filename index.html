@@ -147,7 +147,7 @@
             }
 
             fetchUserData();
-            setupEventListeners();
+            await setupEventListeners();
         } catch (error) {
             console.error("Failed to connect wallet:", error);
             showModal("Error", `Failed to connect wallet: ${error.message || "Unknown error."}`);
@@ -232,22 +232,59 @@
     async function setupEventListeners() {
         const log = document.getElementById('eventLog');
         if (log.dataset.listening) {
-             investorVaultContract.removeAllListeners();
-             yieldVaultContract.removeAllListeners();
-             kernelContract.removeAllListeners();
+            try {
+                await investorVaultContract.removeAllListeners();
+                await yieldVaultContract.removeAllListeners();
+                await kernelContract.removeAllListeners();
+            } catch (e) {
+                console.warn("Could not remove all listeners, this may happen on network change.", e);
+            }
         }
         log.dataset.listening = 'true';
         log.innerHTML = '<li>Listening for events from all contracts...</li>';
 
-        investorVaultContract.on('*', (event) => addLogEntry(event, 'InvestorVault'));
-        yieldVaultContract.on('*', (event) => addLogEntry(event, 'YieldVault'));
-        kernelContract.on('*', (event) => addLogEntry(event, 'Kernel'));
+        try {
+            investorVaultContract.on('*', (event) => addLogEntry(event, 'InvestorVault'));
+            yieldVaultContract.on('*', (event) => addLogEntry(event, 'YieldVault'));
+            kernelContract.on('*', (event) => addLogEntry(event, 'Kernel'));
+        } catch (e) {
+            console.error("Fatal error setting up event listeners:", e);
+            addLogEntry({ fragment: { name: "Error" }, args: { message: "Could not connect to event stream." } }, "System");
+        }
     }
 
     function addLogEntry(event, contractName) {
+        if (!event || !event.fragment) return; // Ignore empty events
         const li = document.createElement('li');
-        li.className = 'border-b border-gray-700 pb-1 mb-1';
-        let content = `<span class="font-bold text-gray-400">[${contractName}]</span> <span class="font-bold text-orange-400">${event.fragment.name}</span>`;
+        li.className = 'border-b border-gray-700 pb-1 mb-1 text-left';
+        
+        let argsString = "No arguments";
+        if (event.args && Object.keys(event.args).length > 0) {
+            argsString = Object.keys(event.args)
+                .filter(key => isNaN(parseInt(key))) // Filter out numeric keys from array-like objects
+                .map(key => {
+                    let value = event.args[key];
+                    if (typeof value === 'bigint') {
+                         try {
+                            return `${key}: <span class="text-green-300">${ethers.formatUnits(value, 6)}</span>`;
+                        } catch {
+                            return `${key}: <span class="text-green-300">${value.toString()}</span>`;
+                        }
+                    }
+                    if (typeof value === 'string' && value.startsWith('0x')) {
+                         return `${key}: <span class="text-green-300 font-mono text-xs">${value}</span>`;
+                    }
+                    return `${key}: <span class="text-green-300">${value}</span>`;
+                }).join(', ');
+        }
+
+        let content = `
+            <div>
+                <span class="font-bold text-gray-400">[${contractName}]</span> 
+                <span class="font-bold text-orange-400">${event.fragment.name}</span>
+            </div>
+            <div class="text-xs text-gray-300 pl-4">${argsString}</div>
+        `;
         li.innerHTML = content;
         document.getElementById('eventLog').prepend(li);
     }
