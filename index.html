@@ -15,8 +15,8 @@ async function fetchVaultTotals() {
   yieldVaultContract.getVaultBalance(),
   yieldVaultContract.totalFeesAccumulatedInVault()
 ]);
-    const usdc = ethers.formatUnits(vaultBalance.toString(), 6);
-    const totalYield = ethers.formatUnits(totalFees.toString(), 6);
+    const usdc = ethers.formatUnits(BigInt(vaultBalance), 6);
+    const totalYield = ethers.formatUnits(BigInt(totalFees), 6);
     const shares = 'N/A';
 
     document.getElementById('vaultTotalsContent').innerHTML = 
@@ -291,8 +291,8 @@ async function fetchVaultTotals() {
   yieldVaultContract.getVaultBalance(),
   yieldVaultContract.totalFeesAccumulatedInVault()
 ]);
-    const usdc = ethers.formatUnits(vaultBalance.toString(), 6);
-    const totalYield = ethers.formatUnits(totalFees.toString(), 6);
+    const usdc = ethers.formatUnits(BigInt(vaultBalance), 6);
+    const totalYield = ethers.formatUnits(BigInt(totalFees), 6);
     const shares = 'N/A';
 
     document.getElementById('vaultTotalsContent').innerHTML = 
