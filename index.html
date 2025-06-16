@@ -126,7 +126,50 @@ async function sweepFeesToTreasury() {
     alert("Sweep failed.");
   }
 }
+
+// DAO: Approve and fund USDC to Kernel
+const usdcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; // USDC on Arbitrum
+const usdcAbi = [
+  { "name":"approve", "type":"function", "inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}], "outputs":[{"name":"","type":"bool"}], "stateMutability":"nonpayable" },
+  { "name":"allowance", "type":"function", "inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
+  { "name":"balanceOf", "type":"function", "inputs":[{"name":"owner","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
+];
+
+const kernelAbiExtra = [
+  { "name":"fundKernel", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" }
+];
+
+async function approveKernel() {
+  try {
+    const amount = document.getElementById('kernelAmount').value;
+    if (!amount) return alert("Enter amount");
+    const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
+    const amt6 = ethers.parseUnits(amount, 6);
+    const tx = await usdcContract.approve(kernelAddress, amt6);
+    await tx.wait();
+    alert("USDC approved for Kernel");
+  } catch (e) {
+    console.error("Approve failed", e);
+    alert("Approval failed.");
+  }
+}
+
+async function fundKernel() {
+  try {
+    const amount = document.getElementById('kernelAmount').value;
+    const amt6 = ethers.parseUnits(amount, 6);
+    const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
+    const tx = await contract.fundKernel(amt6);
+    await tx.wait();
+    alert("Kernel funded");
+    loadVaultStats();
+  } catch (err) {
+    console.error("Funding kernel failed", err);
+    alert("Kernel fund failed.");
+  }
+}
 </script>
+
 
 </head>
 <body class="bg-black text-white font-sans">
@@ -152,6 +195,14 @@ async function sweepFeesToTreasury() {
 
     <div id="daoTools" class="hidden mt-8 border-t border-orange-400 pt-4">
   <div id="vaultStats" class="text-sm text-left mb-4"></div>
+<div class="text-left mb-4">
+  <label class="block mb-1 text-sm">Fund Kernel (USDC):</label>
+  <input id="kernelAmount" type="number" placeholder="Amount in USDC" class="text-black w-full p-2 rounded mb-2" />
+  <div class="flex gap-2">
+    <button onclick="approveKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded">Approve USDC</button>
+    <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Fund Kernel</button>
+  </div>
+</div>
 <div id="vaultTotals" class="text-left text-sm text-gray-300 mb-4 p-2 border border-gray-700 rounded">
   <h3 class="text-orange-300 font-semibold mb-2">Vault Totals</h3>
   <div id="vaultTotalsContent">Loading...</div>
@@ -402,7 +453,50 @@ async function sweepFeesToTreasury() {
     alert("Sweep failed.");
   }
 }
+
+// DAO: Approve and fund USDC to Kernel
+const usdcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; // USDC on Arbitrum
+const usdcAbi = [
+  { "name":"approve", "type":"function", "inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}], "outputs":[{"name":"","type":"bool"}], "stateMutability":"nonpayable" },
+  { "name":"allowance", "type":"function", "inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" },
+  { "name":"balanceOf", "type":"function", "inputs":[{"name":"owner","type":"address"}], "outputs":[{"name":"","type":"uint256"}], "stateMutability":"view" }
+];
+
+const kernelAbiExtra = [
+  { "name":"fundKernel", "type":"function", "inputs":[{"name":"amount","type":"uint256"}], "outputs":[], "stateMutability":"nonpayable" }
+];
+
+async function approveKernel() {
+  try {
+    const amount = document.getElementById('kernelAmount').value;
+    if (!amount) return alert("Enter amount");
+    const usdcContract = new ethers.Contract(usdcTokenAddress, usdcAbi, signer);
+    const amt6 = ethers.parseUnits(amount, 6);
+    const tx = await usdcContract.approve(kernelAddress, amt6);
+    await tx.wait();
+    alert("USDC approved for Kernel");
+  } catch (e) {
+    console.error("Approve failed", e);
+    alert("Approval failed.");
+  }
+}
+
+async function fundKernel() {
+  try {
+    const amount = document.getElementById('kernelAmount').value;
+    const amt6 = ethers.parseUnits(amount, 6);
+    const contract = new ethers.Contract(kernelAddress, kernelAbi.concat(kernelAbiExtra), signer);
+    const tx = await contract.fundKernel(amt6);
+    await tx.wait();
+    alert("Kernel funded");
+    loadVaultStats();
+  } catch (err) {
+    console.error("Funding kernel failed", err);
+    alert("Kernel fund failed.");
+  }
+}
 </script>
+
 
 </body>
 </html>
