@@ -118,11 +118,21 @@
              <div class="mb-4">
                 <label class="block mb-1 text-sm font-semibold">Repay Loan to Kernel (USDC):</label>
                 <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="repayAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
                     <button onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
                     <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay Loan</button>
                 </div>
-                 <p class="text-xs text-gray-400 mt-1">For solvers (bots/contractors) to repay the principal loan amount.</p>
+                 <p class="text-xs text-gray-400 mt-1">For solvers to repay the principal loan amount.</p>
+            </div>
+            <!-- Process Fees -->
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="approveProcessFees()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                    <button onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Pay Fees</button>
+                </div>
+                 <p class="text-xs text-gray-400 mt-1">For solvers to send the profit/interest portion of a repayment.</p>
             </div>
         </div>
         
@@ -208,7 +218,6 @@
             const info = await investorVaultContract.getInvestorInfo(currentAddress);
             shareAmount = info.share;
             const claimable = ethers.formatUnits(info.claimable, 6);
-            // Display shares by formatting with 6 decimals (since USDC has 6)
             document.getElementById('userShares').textContent = parseFloat(ethers.formatUnits(shareAmount, 6)).toLocaleString();
             document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(4)}`;
         } catch (err) {
@@ -265,6 +274,12 @@
     }
     async function repayLoan() {
         await handleTransaction(kernelContract, 'recordLoanPrincipalRepayment', document.getElementById('repayAmount').value, "Repay Loan");
+    }
+    async function approveProcessFees() {
+        await handleApproval(document.getElementById('feeAmount').value, addresses.kernel);
+    }
+    async function processFees() {
+        await handleTransaction(kernelContract, 'processSolverFees', document.getElementById('feeAmount').value, "Process Fees");
     }
     async function sweepFees() {
         const amount = document.getElementById('sweepAmount').value;
@@ -443,6 +458,8 @@
     window.fundKernel = fundKernel;
     window.approveRepayLoan = approveRepayLoan;
     window.repayLoan = repayLoan;
+    window.approveProcessFees = approveProcessFees;
+    window.processFees = processFees;
     window.sweepFees = sweepFees;
     window.addSolver = addSolver;
     window.removeSolver = removeSolver;
