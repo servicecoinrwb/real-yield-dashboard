@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Service Coin DAO Manager</title>
+  <title>Service Coin Real-Yield Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
   <style>
@@ -16,7 +16,7 @@
 
 <body class="bg-gray-900 text-gray-100 font-sans">
   <div class="max-w-3xl mx-auto p-4 md:p-6 text-center">
-    <h1 class="text-3xl font-bold text-orange-400 mb-6">DAO Manager</h1>
+    <h1 class="text-3xl font-bold text-orange-400 mb-6">Service Coin Real-Yield Dashboard</h1>
 
     <div id="walletStatus" class="mb-6">
       <button onclick="connectWallet()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-transform transform hover:scale-105">
@@ -74,13 +74,21 @@
         <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Capital & Fee Management</h3>
             <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Fund Kernel (USDC):</label>
+                <label class="block mb-1 text-sm font-semibold">Deploy from Investor Vault to Kernel:</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="deployAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="deployToKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Deploy Capital</button>
+                </div>
+                 <p class="text-xs text-gray-400 mt-1">Moves capital from the Investor Vault to the Kernel.</p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
                     <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
                     <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
                 </div>
-                 <p class="text-xs text-gray-400 mt-1">This action deposits capital directly to the Kernel. First approve, then fund.</p>
+                 <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel. First approve, then fund.</p>
             </div>
             <div class="mb-4">
                 <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
@@ -263,11 +271,14 @@
     }
 
     // --- DAO & Solver Actions ---
+    async function deployToKernel() {
+        await handleTransaction(investorVaultContract, 'fundKernel', document.getElementById('deployAmount').value, "Deploy to Kernel");
+    }
     async function approveFundKernel() {
         await handleApproval(document.getElementById('kernelAmount').value, addresses.kernel);
     }
     async function fundKernel() {
-        await handleTransaction(kernelContract, 'depositCapital', document.getElementById('kernelAmount').value, "Fund Kernel");
+        await handleTransaction(kernelContract, 'depositCapital', document.getElementById('kernelAmount').value, "Fund Kernel from Wallet");
     }
     async function approveRepayLoan() {
         await handleApproval(document.getElementById('repayAmount').value, addresses.kernel);
@@ -454,6 +465,7 @@
     window.claimYield = claimYield;
     window.compoundYield = compoundYield;
     window.withdraw = withdraw;
+    window.deployToKernel = deployToKernel;
     window.approveFundKernel = approveFundKernel;
     window.fundKernel = fundKernel;
     window.approveRepayLoan = approveRepayLoan;
