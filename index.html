@@ -91,6 +91,15 @@
                  <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel. First approve, then fund.</p>
             </div>
             <div class="mb-4">
+                <label class="block mb-1 text-sm font-semibold">Distribute Yield to Investor Vault (USDC):</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="distributeYieldAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                    <button onclick="approveDistributeYield()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                    <button onclick="distributeYield()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Distribute</button>
+                </div>
+                 <p class="text-xs text-gray-400 mt-1">Sends USDC from your wallet to the Investor Vault to become claimable yield.</p>
+            </div>
+            <div class="mb-4">
                 <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
                 <div class="flex flex-col sm:flex-row gap-2">
                      <input id="sweepAmount" type="number" placeholder="USDC Amount (optional)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
@@ -292,6 +301,12 @@
     async function processFees() {
         await handleTransaction(kernelContract, 'processSolverFees', document.getElementById('feeAmount').value, "Process Fees");
     }
+    async function approveDistributeYield() {
+        await handleApproval(document.getElementById('distributeYieldAmount').value, addresses.investorVault);
+    }
+    async function distributeYield() {
+        await handleTransaction(investorVaultContract, 'receiveYield', document.getElementById('distributeYieldAmount').value, "Distribute Yield");
+    }
     async function sweepFees() {
         const amount = document.getElementById('sweepAmount').value;
         if (amount && Number(amount) > 0) {
@@ -472,6 +487,8 @@
     window.repayLoan = repayLoan;
     window.approveProcessFees = approveProcessFees;
     window.processFees = processFees;
+    window.approveDistributeYield = approveDistributeYield;
+    window.distributeYield = distributeYield;
     window.sweepFees = sweepFees;
     window.addSolver = addSolver;
     window.removeSolver = removeSolver;
