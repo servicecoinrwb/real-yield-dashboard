@@ -377,9 +377,41 @@
     async function checkSolverStatus() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
+        
+        showModal("Checking Status...", `Fetching details for ${solverAddress}...`);
+
         try {
             const isWhitelisted = await kernelContract.whitelistedSolvers(solverAddress);
-            showModal("Solver Status", `Address ${solverAddress} is ${isWhitelisted ? '<span class="text-green-400 font-bold">whitelisted</span>' : '<span class="text-red-400 font-bold">NOT whitelisted</span>'}.`);
+            let message = `<div class="text-left">Address <span class="font-mono text-xs">${solverAddress}</span> is ${isWhitelisted ? '<span class="text-green-400 font-bold">whitelisted</span>' : '<span class="text-red-400 font-bold">NOT whitelisted</span>'}.</div>`;
+            
+            if (isWhitelisted) {
+                try {
+                    const loanDetails = await kernelContract.getLoanDetails(solverAddress);
+                    const principal = loanDetails.principal;
+                    const interest = loanDetails.interest;
+
+                    if (principal > 0n) {
+                         const totalDue = principal + interest;
+                         message += `
+                            <div class="mt-4 text-left p-3 bg-gray-700 rounded-md">
+                                <h4 class="font-semibold text-white mb-1">Outstanding Loan:</h4>
+                                <p>Principal: <span class="font-bold text-cyan-400">${ethers.formatUnits(principal, 6)} USDC</span></p>
+                                <p>Interest: <span class="font-bold text-red-400">${ethers.formatUnits(interest, 6)} USDC</span></p>
+                                <p>Total Due: <span class="font-bold text-yellow-400">${ethers.formatUnits(totalDue, 6)} USDC</span></p>
+                            </div>
+                        `;
+                    } else {
+                        message += '<div class="text-gray-400 mt-2 text-left">This solver has no active loan.</div>';
+                    }
+
+                } catch (loanError) {
+                     console.error("Could not fetch loan details for solver:", loanError);
+                     message += '<div class="text-gray-400 mt-2 text-left">This solver has no active loan.</div>';
+                }
+            }
+            
+            showModal("Solver Status", message);
+
         } catch (e) {
             console.error("Failed to check solver status:", e);
             showModal("Error", "Could not check solver status.");
@@ -498,7 +530,7 @@
         modal.innerHTML = `
             <div class="bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm text-center border-2 border-orange-500">
                 <h3 class="text-xl font-bold text-orange-400 mb-4">${title}</h3>
-                <p class="text-gray-200 mb-6 break-words">${message}</p>
+                <div class="text-gray-200 mb-6 break-words">${message}</div>
                 <button onclick="document.getElementById('alertModal').remove()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold">Close</button>
             </div>
         `;
@@ -531,4 +563,3 @@
 
 </body>
 </html>
-
