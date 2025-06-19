@@ -1,190 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Service Coin Real-Yield Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
-  <style>
-    #eventLog::-webkit-scrollbar { width: 8px; }
-    #eventLog::-webkit-scrollbar-track { background: #2d3748; }
-    #eventLog::-webkit-scrollbar-thumb { background: #718096; border-radius: 4px; }
-    #eventLog::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Coin Real-Yield Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.12.1/dist/ethers.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        #eventLog::-webkit-scrollbar { width: 8px; }
+        #eventLog::-webkit-scrollbar-track { background: #1a202c; } /* Even darker gray */
+        #eventLog::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        #eventLog::-webkit-scrollbar-thumb:hover { background: #718096; }
+    </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100 font-sans">
-  <div class="max-w-3xl mx-auto p-4 md:p-6 text-center">
-    <h1 class="text-3xl font-bold text-orange-400 mb-6">Service Coin Real-Yield Dashboard</h1>
+<body class="bg-gray-900 text-gray-200 font-sans">
+    <div class="max-w-4xl mx-auto p-4 md:p-6">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-orange-400">Service Coin Real-Yield Dashboard</h1>
+        </header>
 
-    <div id="walletStatus" class="mb-6">
-      <button onclick="connectWallet()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-transform transform hover:scale-105">
-        Connect Wallet
-      </button>
-    </div>
-
-    <div id="userSection" class="hidden text-left space-y-6">
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Your Wallet</h2>
-            <div id="userInfo" class="space-y-2 text-lg">
-                <p>Address: <span id="walletAddress" class="font-mono text-sm bg-gray-700 p-1 rounded"></span></p>
-                <p>Native USDC Balance: <span id="nativeUsdcBalance" class="font-bold text-cyan-400">...</span></p>
-                <p>Bridged USDC.e Balance: <span id="bridgedUsdcBalance" class="font-bold text-gray-400">...</span></p>
-                <hr class="border-gray-700 my-2">
-                <p>Your Shares (Investor Vault): <span id="userShares" class="font-bold text-green-400">...</span></p>
-                <p>Claimable Yield (Investor Vault): <span id="claimableYield" class="font-bold text-green-400">...</span></p>
-            </div>
+        <div id="walletStatus" class="mb-6 text-center">
+            <button onclick="connectWallet()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-transform transform hover:scale-105">
+                Connect Wallet
+            </button>
         </div>
 
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Your Actions</h2>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Deposit USDC to Investor Vault:</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="depositAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600 focus:ring-orange-500 focus:border-orange-500" />
-                    <button onclick="approveDeposit()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold whitespace-nowrap">Approve</button>
-                    <button onclick="deposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Deposit</button>
+        <div id="userSection" class="hidden text-left space-y-6">
+            <!-- User Wallet & Actions Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700">
+                    <h2 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Your Wallet</h2>
+                    <div id="userInfo" class="space-y-2 text-md">
+                        <p>Address: <span id="walletAddress" class="font-mono text-sm bg-gray-700 p-1 rounded break-all"></span></p>
+                        <p>USDC Balance: <span id="nativeUsdcBalance" class="font-bold text-cyan-400">...</span></p>
+                        <hr class="border-gray-700 my-3">
+                        <p>Your Shares (Investor Vault): <span id="userShares" class="font-bold text-green-400">...</span></p>
+                        <p>Claimable Yield (Investor Vault): <span id="claimableYield" class="font-bold text-green-400">...</span></p>
+                    </div>
                 </div>
-                <p class="text-xs text-gray-400 mt-1">First approve, then deposit.</p>
-            </div>
-            <div class="flex flex-wrap justify-around gap-3 mt-3">
-              <button onclick="claimYield()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md font-semibold flex-grow">Claim Yield</button>
-              <button onclick="compoundYield()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md font-semibold text-black flex-grow">Compound Yield</button>
-              <button onclick="withdraw()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-semibold flex-grow">Withdraw All</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="daoTools" class="hidden mt-8 border-t-2 border-orange-400 pt-6 text-left space-y-6">
-        <h2 class="text-2xl font-semibold text-orange-300 mb-4 text-center">DAO & Solver Tools</h2>
 
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">System Stats</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-md">
-                <p>Kernel Balance (Live): <span id="kernelBalance" class="font-bold text-yellow-300">...</span></p>
-                <p>Investor Vault Balance (Live): <span id="investorVaultBalance" class="font-bold text-blue-300">...</span></p>
-                <p>Total Capital Deposited (All-Time): <span id="investorVaultTotalDeposits" class="font-bold text-blue-300">...</span></p>
-                <p>Yield Vault Balance (Live): <span id="yieldVaultBalance" class="font-bold text-purple-300">...</span></p>
-                <p>Total Fees Processed (All-Time): <span id="yieldVaultTotalFees" class="font-bold text-purple-300">...</span></p>
-                <p>Current Performance Fee: <span id="performanceFee" class="font-bold text-pink-400">...</span></p>
-            </div>
-        </div>
-
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Capital & Fee Management</h3>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Deploy from Investor Vault to Kernel:</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="deployAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="deployToKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Deploy Capital</button>
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700">
+                    <h2 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Your Actions</h2>
+                    <div class="mb-4">
+                        <label class="block mb-1 text-sm font-semibold">Deposit USDC to Investor Vault:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="depositAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600 focus:ring-orange-500 focus:border-orange-500" />
+                            <button onclick="approveDeposit()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold whitespace-nowrap">Approve</button>
+                            <button onclick="deposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Deposit</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">First approve, then deposit.</p>
+                    </div>
+                    <div class="flex flex-wrap justify-around gap-3 mt-3">
+                        <button onclick="claimYield()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md font-semibold flex-grow">Claim Yield</button>
+                        <button onclick="compoundYield()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md font-semibold text-black flex-grow">Compound Yield</button>
+                        <button onclick="withdraw()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-semibold flex-grow">Withdraw All</button>
+                    </div>
                 </div>
-                 <p class="text-xs text-gray-400 mt-1">Moves capital from the Investor Vault to the Kernel.</p>
-            </div>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                    <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund Kernel</button>
-                </div>
-                 <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel. First approve, then fund.</p>
-            </div>
-             <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Set DAO Performance Fee:</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="performanceFeeBps" type="number" placeholder="Fee in BPS (e.g., 2000 for 20%)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="setPerformanceFee()" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md font-semibold">Set Fee</button>
-                </div>
-                 <p class="text-xs text-gray-400 mt-1">Sets the DAO's take rate on profits.</p>
-            </div>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                     <input id="sweepAmount" type="number" placeholder="USDC Amount (optional)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="sweepFees()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Sweep Fees</button>
-                </div>
-                <p class="text-xs text-gray-400 mt-1">Leave amount blank to sweep the full balance.</p>
-            </div>
-        </div>
-
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Solver & Loan Management</h3>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Manage Solver Whitelist:</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="solverAddress" type="text" placeholder="Solver Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="addSolver()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Add</button>
-                    <button onclick="removeSolver()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-semibold">Remove</button>
-                    <button onclick="checkSolverStatus()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md font-semibold">Check</button>
-                </div>
-            </div>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Disburse Loan to Solver (USDC):</label>
-                <div class="flex flex-col gap-2">
-                     <input id="disburseSolverAddress" type="text" placeholder="Whitelisted Solver Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                     <input id="disburseAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                     <button onclick="disburseLoan()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Disburse Loan</button>
-                </div>
-                 <p class="text-xs text-gray-400 mt-1">Sends funds from the Kernel to a whitelisted solver.</p>
-            </div>
-             <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Repay Loan to Kernel (USDC):</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                    <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay Loan</button>
-                </div>
-                 <p class="text-xs text-gray-400 mt-1">For solvers to repay the principal loan amount.</p>
-            </div>
-            <div class="mb-4">
-                <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                    <button onclick="approveProcessFees()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                    <button onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Pay Fees</button>
-                </div>
-                 <p class="text-xs text-gray-400 mt-1">For solvers to send the profit/interest portion of a repayment.</p>
             </div>
         </div>
         
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Batch Operations (Investor Vault)</h3>
-            <textarea id="batchAddresses" placeholder="Enter investor addresses, one per line" class="w-full p-2 bg-gray-700 text-white rounded-md border border-gray-600 h-24"></textarea>
-            <div class="space-x-3 mt-2">
-              <button onclick="daoBatchClaim()" class="bg-green-800 hover:bg-green-900 px-4 py-2 rounded-md font-semibold">Batch Claim</button>
-              <button onclick="daoBatchWithdraw()" class="bg-red-800 hover:bg-red-900 px-4 py-2 rounded-md font-semibold">Batch Withdraw</button>
+        <div id="daoTools" class="hidden mt-8 border-t-2 border-orange-400 pt-6 text-left space-y-6">
+            <h2 class="text-2xl font-semibold text-orange-300 mb-4 text-center">DAO & Solver Tools</h2>
+
+            <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700">
+                <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">System Stats</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-md">
+                    <p>Kernel Balance (Live): <span id="kernelBalance" class="font-bold text-yellow-300">...</span></p>
+                    <p>Investor Vault Balance (Live): <span id="investorVaultBalance" class="font-bold text-blue-300">...</span></p>
+                    <p>Yield Vault Balance (Live): <span id="yieldVaultBalance" class="font-bold text-purple-300">...</span></p>
+                    <p>Total Capital Deployed (Kernel): <span id="totalCapitalDeployed" class="font-bold text-yellow-300">...</span></p>
+                    <p>Total Deposits (Investor Vault): <span id="investorVaultTotalDeposits" class="font-bold text-blue-300">...</span></p>
+                    <p>Total Fees Processed (Kernel): <span id="totalFeesProcessed" class="font-bold text-purple-300">...</span></p>
+                    <p>Current Performance Fee: <span id="performanceFee" class="font-bold text-pink-400">N/A (Moved to Gov)</span></p>
+                </div>
+            </div>
+
+            <!-- Management Grids -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Capital & Fee Management -->
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700 space-y-4">
+                    <h3 class="text-xl font-semibold text-orange-300 mb-2 border-b border-gray-700 pb-2">Capital & Fee Management</h3>
+                    <div>
+                        <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                            <button onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold">Fund</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel.</p>
+                    </div>
+                     <div>
+                        <label class="block mb-1 text-sm font-semibold text-gray-500">Set DAO Performance Fee (Disabled):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="performanceFeeBps" type="number" placeholder="Fee management moved to Gov contract" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" disabled/>
+                            <button onclick="setPerformanceFee()" class="bg-gray-600 px-4 py-2 rounded-md font-semibold cursor-not-allowed">Set Fee</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">This function is no longer on the Kernel contract.</p>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                             <input id="sweepAmount" type="number" placeholder="USDC Amount (optional)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="sweepFees()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Sweep</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Leave amount blank to sweep the full balance.</p>
+                    </div>
+                </div>
+
+                <!-- Solver & Loan Management -->
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700 space-y-4">
+                    <h3 class="text-xl font-semibold text-orange-300 mb-2 border-b border-gray-700 pb-2">Solver & Loan Management</h3>
+                     <div>
+                        <label class="block mb-1 text-sm font-semibold">Manage Solver Whitelist:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="solverAddress" type="text" placeholder="Solver Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="addSolver()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Add</button>
+                            <button onclick="removeSolver()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-semibold">Remove</button>
+                            <button onclick="checkSolverStatus()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md font-semibold">Check</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm font-semibold">Disburse Loan to Solver (USDC):</label>
+                        <div class="flex flex-col gap-2">
+                             <input id="disburseSolverAddress" type="text" placeholder="Whitelisted Solver Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                             <input id="disburseAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                             <button onclick="disburseLoan()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Disburse Loan</button>
+                        </div>
+                         <p class="text-xs text-gray-400 mt-1">Sends funds from the Kernel to a whitelisted solver.</p>
+                    </div>
+                     <div>
+                        <label class="block mb-1 text-sm font-semibold">Repay Loan Principal to Kernel (USDC):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                            <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay</button>
+                        </div>
+                         <p class="text-xs text-gray-400 mt-1">For solvers to repay the principal loan amount.</p>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="approveProcessFees()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                            <button onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Pay</button>
+                        </div>
+                         <p class="text-xs text-gray-400 mt-1">For solvers to send the profit/interest portion of a repayment.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700">
+                    <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Batch Operations (Investor Vault)</h3>
+                    <textarea id="batchAddresses" placeholder="Enter investor addresses, one per line" class="w-full p-2 bg-gray-700 text-white rounded-md border border-gray-600 h-24"></textarea>
+                    <div class="space-x-3 mt-2">
+                      <button onclick="daoBatchClaim()" class="bg-green-800 hover:bg-green-900 px-4 py-2 rounded-md font-semibold">Batch Claim</button>
+                      <button onclick="daoBatchWithdraw()" class="bg-red-800 hover:bg-red-900 px-4 py-2 rounded-md font-semibold">Batch Withdraw</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700">
+                    <h3 class="text-xl font-semibold text-orange-300 mb-2">📜 Transaction Log</h3>
+                    <ul id="eventLog" class="text-sm text-gray-300 space-y-1 h-48 overflow-y-auto bg-gray-900 p-2 rounded-md"></ul>
+                </div>
             </div>
         </div>
-        
-        <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-orange-300 mb-2">📜 Transaction Log</h3>
-            <ul id="eventLog" class="text-sm text-gray-300 space-y-1 h-48 overflow-y-auto bg-gray-900 p-2 rounded-md"></ul>
-        </div>
     </div>
-  </div>
 
 <script>
     // --- Global Scope Variables ---
-    let provider, signer, usdcContract, usdcEContract, investorVaultContract, yieldVaultContract, kernelContract;
+    let provider, signer, usdcContract, investorVaultContract, yieldVaultContract, kernelContract;
     let currentAddress;
     let shareAmount = 0n;
 
-    // --- Contract Addresses & ABIs ---
+    // --- Contract Addresses & ABIs (UPDATED) ---
     const addresses = {
         nativeUsdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-        bridgedUsdc: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
         investorVault: '0x1a51f1966d35661573908DC913307076d937aa90',
         yieldVault: '0x44D64E1B9dC5F90b389900Da24B8de631222432C',
-        kernel: '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1', // NEW KERNEL ADDRESS
-        dao: '0xcfe077e6f7554B1724546E02624a0832D1f4557a'
+        kernel: '0xce0e45b12BFF1A1E5E7770aeE74b7E85194387f1',
     };
 
     const abis = {
         usdc: JSON.parse(`[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]`),
-        investorVault: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesMinted","type":"uint256"}],"name":"Deposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldKernel","type":"address"},{"indexed":true,"internalType":"address","name":"newKernel","type":"address"}],"name":"KernelUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesBurned","type":"uint256"}],"name":"Withdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newShares","type":"uint256"}],"name":"YieldCompounded","type":"event"},{"inputs":[],"name":"LOCKUP_PERIOD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchClaimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchWithdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"claimableYield","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"compoundYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"fundKernel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"getInvestorInfo","outputs":[{"internalType":"uint256","name":"share","type":"uint256"},{"internalType":"uint256","name":"claimable","type":"uint256"},{"internalType":"uint256","name":"claimed","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVaultTotals","outputs":[{"internalType":"uint256","name":"totalUSDC","type":"uint256"},{"internalType":"uint256","name":"totalSharesMinted","type":"uint256"},{"internalType":"uint256","name":"totalYield","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"receiveYield","outputs":[],"stateMutability":"nonpayable","type":"function"}]`),
-        yieldVault: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_governance","type":"address"},{"internalType":"address","name":"_kernel","type":"address"},{"internalType":"address","name":"_feeToken","type":"address"},{"internalType":"address","name":"_daoTreasury","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"getVaultBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"recordFeeDeposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"sweepFullBalanceToTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"sweepToTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getTotalFeesAccumulatedInVault","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]`),
-        kernel: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_governance","type":"address"},{"internalType":"address","name":"_initialSolver","type":"address"},{"internalType":"address","name":"_yieldVault","type":"address"},{"internalType":"address","name":"_investorVault","type":"address"},{"internalType":"address","name":"_token","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"funder","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"CapitalDeposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesForwardedToVault","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldVault","type":"address"},{"indexed":true,"internalType":"address","name":"newVault","type":"address"}],"name":"InvestorVaultAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"KernelFundsWithdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanDisbursed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"string","name":"note","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"LoanNoteLogged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanPrincipalRepaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newFeeBps","type":"uint256"}],"name":"PerformanceFeeUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"bool","name":"isWhitelisted","type":"bool"}],"name":"SolverAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldDistributedToInvestors","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldVault","type":"address"},{"indexed":true,"internalType":"address","name":"newVault","type":"address"}],"name":"YieldVaultAddressUpdated","type":"event"},{"inputs":[],"name":"capitalToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"depositCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"solver","type":"address"},{"internalType":"uint256","name":"_loanAmount","type":"uint256"}],"name":"disburseLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getKernelBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"investorVaultAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"note","type":"string"}],"name":"logLoanNote","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"performanceFeeBps","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_feeAmountReceivedByKernel","type":"uint256"}],"name":"processSolverFees","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_repaidAmount","type":"uint256"}],"name":"recordLoanPrincipalRepayment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newInvestorVault","type":"address"}],"name":"setInvestorVaultAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_newFeeBps","type":"uint256"}],"name":"setPerformanceFee","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_solver","type":"address"},{"internalType":"bool","name":"_whitelisted","type":"bool"}],"name":"setSolverAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newYieldVault","type":"address"}],"name":"setYieldVaultAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalCapitalDeployed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalFeesProcessedViaKernel","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"whitelistedSolvers","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"address","name":"_recipient","type":"address"}],"name":"withdrawSurplusCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"yieldVaultAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`)
+        // UPDATED InvestorVaultV2 ABI
+        investorVault: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesMinted","type":"uint256"}],"name":"Deposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldKernel","type":"address"},{"indexed":true,"internalType":"address","name":"newKernel","type":"address"}],"name":"KernelUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesBurned","type":"uint256"}],"name":"Withdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newShares","type":"uint256"}],"name":"YieldCompounded","type":"event"},{"inputs":[],"name":"LOCKUP_PERIOD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchClaimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchWithdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"claimableYield","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"claimedYield","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"compoundYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"depositTimestamps","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"fundKernel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"getInvestorInfo","outputs":[{"internalType":"uint256","name":"share","type":"uint256"},{"internalType":"uint256","name":"claimable","type":"uint256"},{"internalType":"uint256","name":"claimed","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVaultTotals","outputs":[{"internalType":"uint256","name":"totalUSDC","type":"uint256"},{"internalType":"uint256","name":"totalSharesMinted","type":"uint256"},{"internalType":"uint256","name":"totalYield","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"kernel","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"receiveYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_kernel","type":"address"}],"name":"setKernel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"shares","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDeposits","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalShares","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalYieldDistributed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"usdc","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}]`),
+        // UPDATED YieldVault ABI
+        yieldVault: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_governance","type":"address"},{"internalType":"address","name":"_kernel","type":"address"},{"internalType":"address","name":"_feeToken","type":"address"},{"internalType":"address","name":"_daoTreasury","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldTreasury","type":"address"},{"indexed":true,"internalType":"address","name":"newTreasury","type":"address"}],"name":"DaoTreasuryUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"fromKernel","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesDepositedInVault","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"treasury","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesSweptToTreasury","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldKernel","type":"address"},{"indexed":true,"internalType":"address","name":"newKernel","type":"address"}],"name":"KernelAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"inputs":[],"name":"daoTreasury","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"feeToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotalFeesAccumulatedInVault","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVaultBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"kernelAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"recordFeeDeposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newTreasury","type":"address"}],"name":"setDaoTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newKernel","type":"address"}],"name":"setKernelAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"sweepFullBalanceToTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"sweepToTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalFeesAccumulatedInVault","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}]`),
+        // UPDATED KernelSmartAccountV2 ABI
+        kernel: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_governance","type":"address"},{"internalType":"address","name":"_initialSolver","type":"address"},{"internalType":"address","name":"_yieldVault","type":"address"},{"internalType":"address","name":"_token","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"funder","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"CapitalDeposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesForwardedToVault","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"KernelFundsWithdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanDisbursed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"string","name":"note","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"LoanNoteLogged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanPrincipalRepaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"bool","name":"isWhitelisted","type":"bool"}],"name":"SolverAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldVault","type":"address"},{"indexed":true,"internalType":"address","name":"newVault","type":"address"}],"name":"YieldVaultAddressUpdated","type":"event"},{"inputs":[],"name":"capitalToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"depositCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"solver","type":"address"},{"internalType":"uint256","name":"_loanAmount","type":"uint256"}],"name":"disburseLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getKernelBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"note","type":"string"}],"name":"logLoanNote","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_feeAmountReceivedByKernel","type":"uint256"}],"name":"processSolverFees","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_repaidAmount","type":"uint256"}],"name":"recordLoanPrincipalRepayment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_solver","type":"address"},{"internalType":"bool","name":"_whitelisted","type":"bool"}],"name":"setSolverAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newYieldVault","type":"address"}],"name":"setYieldVaultAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalCapitalDeployed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalFeesProcessedViaKernel","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"whitelistedSolvers","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"address","name":"_recipient","type":"address"}],"name":"withdrawSurplusCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"yieldVaultAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`)
     };
 
     // --- Main Functions ---
@@ -196,12 +205,11 @@
             currentAddress = await signer.getAddress();
             
             usdcContract = new ethers.Contract(addresses.nativeUsdc, abis.usdc, signer);
-            usdcEContract = new ethers.Contract(addresses.bridgedUsdc, abis.usdc, signer);
             investorVaultContract = new ethers.Contract(addresses.investorVault, abis.investorVault, signer);
             yieldVaultContract = new ethers.Contract(addresses.yieldVault, abis.yieldVault, signer);
             kernelContract = new ethers.Contract(addresses.kernel, abis.kernel, signer);
 
-            document.getElementById('walletStatus').innerHTML = `<p class="text-green-400">Connected</p>`;
+            document.getElementById('walletStatus').innerHTML = `<p class="text-green-400 font-semibold">Connected</p>`;
             document.getElementById('walletAddress').textContent = currentAddress;
             document.getElementById('userSection').classList.remove('hidden');
 
@@ -219,11 +227,11 @@
         }
     }
 
-    // --- Data Fetching ---
+    // --- Data Fetching (UPDATED) ---
     async function fetchUserData() {
         try {
             const nativeBalance = await usdcContract.balanceOf(currentAddress);
-            document.getElementById('nativeUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(nativeBalance, 6)).toFixed(4)} USDC`;
+            document.getElementById('nativeUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(nativeBalance, 6)).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })} USDC`;
 
             const info = await investorVaultContract.getInvestorInfo(currentAddress);
             shareAmount = info.share;
@@ -232,27 +240,32 @@
             document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(4)}`;
         } catch (err) {
             console.error("Error fetching user data:", err);
+            // Don't show modal for passive data fetch errors
         }
     }
 
     async function fetchAllDaoData() {
         try {
-            const [kernelBal, yieldVaultBal, yieldVaultFees, investorVaultBal, investorVaultTotals, perfFee] = await Promise.all([
+            const [kernelBal, yieldVaultBal, investorVaultBal, investorVaultTotals, totalCapDeployed, totalFeesProcessed] = await Promise.all([
                 kernelContract.getKernelBalance(),
                 yieldVaultContract.getVaultBalance(),
-                yieldVaultContract.getTotalFeesAccumulatedInVault(),
                 usdcContract.balanceOf(addresses.investorVault), 
                 investorVaultContract.getVaultTotals(),
-                kernelContract.performanceFeeBps()
+                kernelContract.totalCapitalDeployed(),
+                kernelContract.totalFeesProcessedViaKernel(),
+                // NOTE: performanceFeeBps() has been removed from the new Kernel ABI.
+                // This logic is likely in a separate governance contract now.
             ]);
-            document.getElementById('kernelBalance').textContent = `$${parseFloat(ethers.formatUnits(kernelBal, 6)).toFixed(2)}`;
-            document.getElementById('yieldVaultBalance').textContent = `$${parseFloat(ethers.formatUnits(yieldVaultBal, 6)).toFixed(2)}`;
-            document.getElementById('yieldVaultTotalFees').textContent = `$${parseFloat(ethers.formatUnits(yieldVaultFees, 6)).toFixed(2)}`;
-            document.getElementById('investorVaultBalance').textContent = `$${parseFloat(ethers.formatUnits(investorVaultBal, 6)).toFixed(2)}`;
-            document.getElementById('investorVaultTotalDeposits').textContent = `$${parseFloat(ethers.formatUnits(investorVaultTotals.totalUSDC, 6)).toFixed(2)}`;
-            document.getElementById('performanceFee').textContent = `${(Number(perfFee) / 100).toFixed(2)}%`;
+            document.getElementById('kernelBalance').textContent = `$${parseFloat(ethers.formatUnits(kernelBal, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('yieldVaultBalance').textContent = `$${parseFloat(ethers.formatUnits(yieldVaultBal, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('investorVaultBalance').textContent = `$${parseFloat(ethers.formatUnits(investorVaultBal, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('investorVaultTotalDeposits').textContent = `$${parseFloat(ethers.formatUnits(investorVaultTotals.totalUSDC, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('totalCapitalDeployed').textContent = `$${parseFloat(ethers.formatUnits(totalCapDeployed, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('totalFeesProcessed').textContent = `$${parseFloat(ethers.formatUnits(totalFeesProcessed, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
         } catch (err) {
             console.error('Error fetching DAO data:', err);
+            showModal("DAO Data Error", "Could not fetch all system stats. The contract ABIs might be out of sync. Check the console for details.");
         }
     }
 
@@ -261,72 +274,66 @@
         await handleApproval(document.getElementById('depositAmount').value, addresses.investorVault);
     }
     async function deposit() {
-        await handleTransaction(investorVaultContract, 'deposit', document.getElementById('depositAmount').value, "Deposit");
+        await handleTransaction(investorVaultContract, 'deposit', [ethers.parseUnits(document.getElementById('depositAmount').value || '0', 6)], "Deposit");
     }
     async function claimYield() {
-        await handleTransaction(investorVaultContract, 'claimYield', null, "Claim Yield");
+        await handleTransaction(investorVaultContract, 'claimYield', [], "Claim Yield");
     }
     async function compoundYield() {
-        await handleTransaction(investorVaultContract, 'compoundYield', null, "Compound Yield");
+        await handleTransaction(investorVaultContract, 'compoundYield', [], "Compound Yield");
     }
     async function withdraw() {
         if (shareAmount === 0n) return showModal("Withdraw Error", "You have no shares to withdraw.");
-        await handleTransaction(investorVaultContract, 'withdraw', shareAmount, "Withdraw", false);
+        await handleTransaction(investorVaultContract, 'withdraw', [shareAmount], "Withdraw All");
     }
 
-    // --- DAO & Solver Actions ---
-    async function deployToKernel() {
-        await handleTransaction(investorVaultContract, 'fundKernel', document.getElementById('deployAmount').value, "Deploy to Kernel");
-    }
+    // --- DAO & Solver Actions (UPDATED) ---
     async function approveFundKernel() {
         await handleApproval(document.getElementById('kernelAmount').value, addresses.kernel);
     }
     async function fundKernel() {
-        await handleTransaction(kernelContract, 'depositCapital', document.getElementById('kernelAmount').value, "Fund Kernel from Wallet");
+        await handleTransaction(kernelContract, 'depositCapital', [ethers.parseUnits(document.getElementById('kernelAmount').value || '0', 6)], "Fund Kernel from Wallet");
     }
     async function setPerformanceFee() {
-        const feeBps = document.getElementById('performanceFeeBps').value;
-        if (!feeBps || isNaN(feeBps) || feeBps < 0 || feeBps > 10000) {
-            return showModal("Input Error", "Please enter a valid fee in basis points (0-10000).");
-        }
-        await handleTransaction(kernelContract, 'setPerformanceFee', BigInt(feeBps), "Set Performance Fee", false);
+        // This function is disabled as it's no longer part of the Kernel contract.
+        showModal("Function Removed", "The ability to set the performance fee is no longer on the Kernel contract. This is likely managed by a separate Governance contract now.");
     }
     async function approveRepayLoan() {
         await handleApproval(document.getElementById('repayAmount').value, addresses.kernel);
     }
     async function repayLoan() {
-        await handleTransaction(kernelContract, 'recordLoanPrincipalRepayment', document.getElementById('repayAmount').value, "Repay Loan");
+        await handleTransaction(kernelContract, 'recordLoanPrincipalRepayment', [ethers.parseUnits(document.getElementById('repayAmount').value || '0', 6)], "Repay Loan");
     }
     async function approveProcessFees() {
         await handleApproval(document.getElementById('feeAmount').value, addresses.kernel);
     }
     async function processFees() {
-        await handleTransaction(kernelContract, 'processSolverFees', document.getElementById('feeAmount').value, "Process Fees");
+        await handleTransaction(kernelContract, 'processSolverFees', [ethers.parseUnits(document.getElementById('feeAmount').value || '0', 6)], "Process Fees");
     }
     async function sweepFees() {
         const amount = document.getElementById('sweepAmount').value;
         if (amount && Number(amount) > 0) {
-            await handleTransaction(yieldVaultContract, 'sweepToTreasury', amount, "Sweep Fees");
+            await handleTransaction(yieldVaultContract, 'sweepToTreasury', [ethers.parseUnits(amount, 6)], "Sweep Fees");
         } else {
-            await handleTransaction(yieldVaultContract, 'sweepFullBalanceToTreasury', null, "Sweep Full Balance");
+            await handleTransaction(yieldVaultContract, 'sweepFullBalanceToTreasury', [], "Sweep Full Balance");
         }
     }
     async function addSolver() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
-        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, true], "Add Solver", false);
+        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, true], "Add Solver");
     }
     async function removeSolver() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
-        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, false], "Remove Solver", false);
+        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, false], "Remove Solver");
     }
     async function checkSolverStatus() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
         try {
             const isWhitelisted = await kernelContract.whitelistedSolvers(solverAddress);
-            showModal("Solver Status", `Address ${solverAddress} is ${isWhitelisted ? 'whitelisted' : 'NOT whitelisted'}.`);
+            showModal("Solver Status", `Address ${solverAddress} is ${isWhitelisted ? '<span class="text-green-400 font-bold">whitelisted</span>' : '<span class="text-red-400 font-bold">NOT whitelisted</span>'}.`);
         } catch (e) {
             console.error("Failed to check solver status:", e);
             showModal("Error", "Could not check solver status.");
@@ -338,17 +345,17 @@
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid solver address.");
         if (!amount || isNaN(amount) || Number(amount) <= 0) return showModal("Input Error", "Please enter a valid amount to disburse.");
         const amountInUnits = ethers.parseUnits(amount, 6);
-        await handleTransaction(kernelContract, 'disburseLoan', [solverAddress, amountInUnits], "Disburse Loan", false);
+        await handleTransaction(kernelContract, 'disburseLoan', [solverAddress, amountInUnits], "Disburse Loan");
     }
     async function daoBatchClaim() {
-        const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(Boolean);
-        if (addresses.length === 0) return showModal("Input Error", "Please provide at least one address.");
-        await handleTransaction(investorVaultContract, 'batchClaimYield', addresses, "Batch Claim", false);
+        const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(addr => ethers.isAddress(addr));
+        if (addresses.length === 0) return showModal("Input Error", "Please provide at least one valid address.");
+        await handleTransaction(investorVaultContract, 'batchClaimYield', [addresses], "Batch Claim");
     }
     async function daoBatchWithdraw() {
-        const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(Boolean);
-        if (addresses.length === 0) return showModal("Input Error", "Please provide at least one address.");
-        await handleTransaction(investorVaultContract, 'batchWithdraw', addresses, "Batch Withdraw", false);
+        const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(addr => ethers.isAddress(addr));
+        if (addresses.length === 0) return showModal("Input Error", "Please provide at least one valid address.");
+        await handleTransaction(investorVaultContract, 'batchWithdraw', [addresses], "Batch Withdraw");
     }
     
     // --- Event Handling & Logging ---
@@ -356,23 +363,19 @@
         const log = document.getElementById('eventLog');
         if (log.dataset.listening) {
             try {
-                await investorVaultContract.removeAllListeners();
-                await yieldVaultContract.removeAllListeners();
-                await kernelContract.removeAllListeners();
-            } catch (e) {
-                console.warn("Could not remove all listeners, this may happen on network change.", e);
-            }
+                investorVaultContract.removeAllListeners();
+                yieldVaultContract.removeAllListeners();
+                kernelContract.removeAllListeners();
+            } catch (e) { console.warn("Could not remove all listeners", e); }
         }
         log.dataset.listening = 'true';
-        log.innerHTML = '<li>Listening for events from all contracts...</li>';
+        log.innerHTML = '<li>Listening for real-time events...</li>';
 
         try {
             investorVaultContract.on('*', (event) => addLogEntry(event, 'InvestorVault'));
             yieldVaultContract.on('*', (event) => addLogEntry(event, 'YieldVault'));
             kernelContract.on('*', (event) => addLogEntry(event, 'Kernel'));
-        } catch (e) {
-            console.error("Fatal error setting up event listeners:", e);
-        }
+        } catch (e) { console.error("Fatal error setting up event listeners:", e); }
     }
 
     function addLogEntry(event, contractName) {
@@ -386,28 +389,21 @@
                 .filter(key => isNaN(parseInt(key))) 
                 .map(key => {
                     let value = event.args[key];
+                    let displayValue = value.toString();
                     if (typeof value === 'bigint') {
                          try {
-                            return `${key}: <span class="text-green-300">${ethers.formatUnits(value, 6)}</span>`;
-                        } catch {
-                            return `${key}: <span class="text-green-300">${value.toString()}</span>`;
-                        }
+                             // Attempt to format as USDC if it's likely a token amount
+                             if (value > 10000n) displayValue = `${ethers.formatUnits(value, 6)}`;
+                         } catch {}
                     }
                     if (typeof value === 'string' && value.startsWith('0x')) {
-                         return `${key}: <span class="text-green-300 font-mono text-xs">${value}</span>`;
+                        displayValue = `<span class="font-mono text-xs">${value.substring(0,6)}...${value.substring(value.length-4)}</span>`;
                     }
-                    return `${key}: <span class="text-green-300">${value}</span>`;
+                     return `${key}: <span class="text-green-300">${displayValue}</span>`;
                 }).join(', ');
         }
 
-        let content = `
-            <div>
-                <span class="font-bold text-gray-400">[${contractName}]</span> 
-                <span class="font-bold text-orange-400">${event.fragment.name}</span>
-            </div>
-            <div class="text-xs text-gray-300 pl-4">${argsString}</div>
-        `;
-        li.innerHTML = content;
+        li.innerHTML = `<div><span class="font-bold text-gray-400">[${contractName}]</span> <span class="font-bold text-orange-400">${event.fragment.name}</span></div><div class="text-xs text-gray-300 pl-4">${argsString}</div>`;
         document.getElementById('eventLog').prepend(li);
     }
 
@@ -425,18 +421,9 @@
         }
     }
 
-    async function handleTransaction(contractInstance, method, value, name, isUSDC = true) {
+    async function handleTransaction(contractInstance, method, args = [], name) {
         showModal("Processing", `Sending ${name} transaction... Please confirm in your wallet.`);
         try {
-            let args = [];
-            if (value !== null) {
-                if (Array.isArray(value)) {
-                    args = value;
-                } else {
-                    const finalValue = isUSDC ? ethers.parseUnits(value, 6) : value;
-                    args.push(finalValue);
-                }
-            }
             const tx = await contractInstance[method](...args);
             await tx.wait();
             showModal("Success", `${name} transaction was successful!`);
@@ -476,7 +463,6 @@
     window.claimYield = claimYield;
     window.compoundYield = compoundYield;
     window.withdraw = withdraw;
-    window.deployToKernel = deployToKernel;
     window.approveFundKernel = approveFundKernel;
     window.fundKernel = fundKernel;
     window.approveRepayLoan = approveRepayLoan;
