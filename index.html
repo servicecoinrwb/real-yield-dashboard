@@ -190,6 +190,7 @@
     let provider, signer, usdcContract, investorVaultContract, yieldVaultContract, kernelContract;
     let currentAddress;
     let shareAmount = 0n;
+    let isSolver = false; // Moved to global scope
 
     // --- Contract Addresses & ABIs (UPDATED) ---
     const addresses = {
@@ -224,7 +225,7 @@
             document.getElementById('walletAddress').textContent = currentAddress;
             document.getElementById('userSection').classList.remove('hidden');
 
-            const isSolver = await kernelContract.whitelistedSolvers(currentAddress);
+            isSolver = await kernelContract.whitelistedSolvers(currentAddress); // Assign to global isSolver
             if (isSolver) {
                 document.getElementById('solverSection').classList.remove('hidden');
                 fetchSolverData();
@@ -263,11 +264,16 @@
 
     async function fetchSolverData() {
         try {
-            // This function is a placeholder. You would replace 'getLoanDetails'
-            // with the actual function from your Kernel contract that returns loan info.
+            // This function assumes the contract reverts if there is no loan.
+            // The catch block handles this by showing a "no loan" message.
             const loanDetails = await kernelContract.getLoanDetails(currentAddress);
             const principal = loanDetails.principal;
             const interest = loanDetails.interest;
+
+            if (principal === 0n && interest === 0n) {
+                 throw new Error("No outstanding loan found.");
+            }
+
             const totalDue = principal + interest;
 
             document.getElementById('solverLoanPrincipal').textContent = `${parseFloat(ethers.formatUnits(principal, 6)).toLocaleString()} USDC`;
@@ -469,7 +475,9 @@
             showModal("Success", `${name} transaction was successful!`);
             
             fetchUserData();
-            if (isSolver) fetchSolverData();
+            if (isSolver) {
+                fetchSolverData();
+            }
             if (!document.getElementById('daoTools').classList.contains('hidden')) {
                  fetchAllDaoData();
             }
@@ -523,3 +531,4 @@
 
 </body>
 </html>
+
