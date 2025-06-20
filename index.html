@@ -40,31 +40,27 @@
                     <h2 class="text-xl font-semibold text-yellow-300 mb-3 border-b border-gray-700 pb-2">Your Solver Loan Status</h2>
                     <div id="solverLoanInfo" class="space-y-2 text-md">
                         <p>Outstanding Loan Principal: <span id="solverLoanPrincipal" class="font-bold text-cyan-400">...</span></p>
-                        <p>Accrued Interest: <span id="solverLoanInterest" class="font-bold text-red-400">...</span></p>
-                        <hr class="border-gray-700 my-3">
-                        <p class="text-lg">Total Amount Due: <span id="solverTotalDue" class="font-bold text-yellow-400">...</span></p>
                     </div>
-                     <p class="text-xs text-gray-400 mt-3">This section is visible because you are a whitelisted solver.</p>
+                     <p class="text-xs text-gray-400 mt-3">This section is visible because you are a whitelisted solver. Interest must be calculated off-chain.</p>
                 </div>
 
                 <div class="bg-gray-800 p-5 rounded-lg shadow-lg border-2 border-yellow-500 space-y-4">
-                     <h2 class="text-xl font-semibold text-yellow-300 mb-3 border-b border-gray-700 pb-2">Solver Actions</h2>
-                     <div>
-                        <label class="block mb-1 text-sm font-semibold">Repay Loan Principal to Kernel (USDC):</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button id="repayLoanBtn" onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Repay</button>
+                     <h2 class="text-xl font-semibold text-yellow-300 mb-3 border-b border-gray-700 pb-2">Settle Your Loan</h2>
+                     <div class="text-sm p-3 bg-gray-900 rounded-md">
+                        <p class="font-semibold">Step 1: Transfer Funds</p>
+                        <p class="text-xs text-gray-400">First, use your wallet to manually transfer the total repayment amount (Principal + Fees) in USDC to the Kernel address:</p>
+                        <p class="font-mono text-xs bg-gray-700 p-1 rounded my-1 break-all" id="kernelContractAddressForTransfer"></p>
+                        <button onclick="copyToClipboard(addresses.kernel)" class="text-xs text-orange-400 hover:underline">Copy Address</button>
+                     </div>
+                      <div class="text-sm p-3 bg-gray-900 rounded-md">
+                        <p class="font-semibold">Step 2: Settle Loan</p>
+                        <p class="text-xs text-gray-400">After your transfer is confirmed, enter the amounts and click Settle.</p>
+                        <div class="mt-2 space-y-2">
+                            <input id="settlePrincipalAmount" type="number" placeholder="Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <input id="settleFeeAmount" type="number" placeholder="Fee/Profit Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="settleLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Settle Loan</button>
                         </div>
-                         <button onclick="handleMaxApproval('repayLoanBtn', addresses.kernel)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                             <button id="payFeesBtn" onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Pay Fees</button>
-                        </div>
-                        <button onclick="handleMaxApproval('payFeesBtn', addresses.kernel)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
-                    </div>
+                     </div>
                 </div>
              </div>
         </div>
@@ -89,9 +85,9 @@
                         <label class="block mb-1 text-sm font-semibold">Deposit USDC to Investor Vault:</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="depositAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600 focus:ring-orange-500 focus:border-orange-500" />
-                            <button id="depositBtn" onclick="deposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Deposit</button>
+                            <button onclick="approveAndDeposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Deposit</button>
                         </div>
-                         <button onclick="handleMaxApproval('depositBtn', addresses.investorVault)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
+                        <p class="text-xs text-gray-400 mt-1">Approves and deposits in a single flow.</p>
                     </div>
                     <div class="flex flex-wrap justify-around gap-3 mt-3">
                         <button onclick="claimYield()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md font-semibold flex-grow">Claim Yield</button>
@@ -127,9 +123,9 @@
                         <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button id="fundKernelBtn" onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Fund Kernel</button>
+                            <button onclick="approveAndFundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Fund</button>
                         </div>
-                        <button onclick="handleMaxApproval('fundKernelBtn', addresses.kernel)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
+                        <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel.</p>
                     </div>
                      <div>
                         <label class="block mb-1 text-sm font-semibold">Set DAO Performance Fee:</label>
@@ -205,14 +201,14 @@
         nativeUsdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
         investorVault: '0x1a51f1966d35661573908DC913307076d937aa90',
         yieldVault: '0x44D64E1B9dC5F90b389900Da24B8de631222432C',
-        kernel: '0x44Bc37669d7cFA3c9Ea93CC0b1520a58FE59d7b3', 
+        kernel: '0xbC25D160A680Dcef3002e4f56bf5101885FEA4d6', 
     };
 
     const abis = {
         usdc: JSON.parse(`[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]`),
         investorVault: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesMinted","type":"uint256"}],"name":"Deposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldKernel","type":"address"},{"indexed":true,"internalType":"address","name":"newKernel","type":"address"}],"name":"KernelUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"sharesBurned","type":"uint256"}],"name":"Withdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"investor","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newShares","type":"uint256"}],"name":"YieldCompounded","type":"event"},{"inputs":[],"name":"LOCKUP_PERIOD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchClaimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"investors","type":"address[]"}],"name":"batchWithdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"claimYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"claimableYield","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"claimedYield","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"compoundYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"depositTimestamps","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"fundKernel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"investor","type":"address"}],"name":"getInvestorInfo","outputs":[{"internalType":"uint256","name":"share","type":"uint256"},{"internalType":"uint256","name":"claimable","type":"uint256"},{"internalType":"uint256","name":"claimed","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVaultTotals","outputs":[{"internalType":"uint256","name":"totalUSDC","type":"uint256"},{"internalType":"uint256","name":"totalSharesMinted","type":"uint256"},{"internalType":"uint256","name":"totalYield","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"kernel","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"receiveYield","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_kernel","type":"address"}],"name":"setKernel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"shares","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDeposits","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalShares","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalYieldDistributed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"usdc","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"shareAmount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}]`),
         yieldVault: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_governance","type":"address"},{"internalType":"address","name":"_kernel","type":"address"},{"internalType":"address","name":"_feeToken","type":"address"},{"internalType":"address","name":"_daoTreasury","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldTreasury","type":"address"},{"indexed":true,"internalType":"address","name":"newTreasury","type":"address"}],"name":"DaoTreasuryUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"fromKernel","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesDepositedInVault","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"treasury","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesSweptToTreasury","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldKernel","type":"address"},{"indexed":true,"internalType":"address","name":"newKernel","type":"address"}],"name":"KernelAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"inputs":[],"name":"daoTreasury","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"feeToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTotalFeesAccumulatedInVault","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVaultBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"kernelAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"recordFeeDeposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newTreasury","type":"address"}],"name":"setDaoTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newKernel","type":"address"}],"name":"setKernelAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"sweepFullBalanceToTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"sweepToTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalFeesAccumulatedInVault","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}]`),
-        kernel: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_governance","type":"address"},{"internalType":"address","name":"_initialSolver","type":"address"},{"internalType":"address","name":"_yieldVault","type":"address"},{"internalType":"address","name":"_investorVault","type":"address"},{"internalType":"address","name":"_token","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"funder","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"CapitalDeposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesForwardedToVault","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldVault","type":"address"},{"indexed":true,"internalType":"address","name":"newVault","type":"address"}],"name":"InvestorVaultAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"KernelFundsWithdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanDisbursed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"string","name":"note","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"LoanNoteLogged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanPrincipalRepaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newFeeBps","type":"uint256"}],"name":"PerformanceFeeUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"bool","name":"isWhitelisted","type":"bool"}],"name":"SolverAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldDistributedToInvestors","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldVault","type":"address"},{"indexed":true,"internalType":"address","name":"newVault","type":"address"}],"name":"YieldVaultAddressUpdated","type":"event"},{"inputs":[],"name":"capitalToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"depositCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"solver","type":"address"},{"internalType":"uint256","name":"_loanAmount","type":"uint256"}],"name":"disburseLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getKernelBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_solver","type":"address"}],"name":"getLoanDetails","outputs":[{"internalType":"uint256","name":"principal","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"lastAccrued","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"investorVaultAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"note","type":"string"}],"name":"logLoanNote","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"performanceFeeBps","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_feeAmountReceivedByKernel","type":"uint256"}],"name":"processSolverFees","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_repaidAmount","type":"uint256"}],"name":"recordLoanPrincipalRepayment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newInvestorVault","type":"address"}],"name":"setInvestorVaultAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_newFeeBps","type":"uint256"}],"name":"setPerformanceFee","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_solver","type":"address"},{"internalType":"bool","name":"_whitelisted","type":"bool"}],"name":"setSolverAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newYieldVault","type":"address"}],"name":"setYieldVaultAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalCapitalDeployed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalFeesProcessedViaKernel","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"whitelistedSolvers","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"address","name":"_recipient","type":"address"}],"name":"withdrawSurplusCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"yieldVaultAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`)
+        kernel: JSON.parse(`[{"inputs":[{"internalType":"address","name":"_governance","type":"address"},{"internalType":"address","name":"_initialSolver","type":"address"},{"internalType":"address","name":"_yieldVault","type":"address"},{"internalType":"address","name":"_investorVault","type":"address"},{"internalType":"address","name":"_token","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"funder","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"CapitalDeposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeesForwardedToVault","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldVault","type":"address"},{"indexed":true,"internalType":"address","name":"newVault","type":"address"}],"name":"InvestorVaultAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"KernelFundsWithdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanDisbursed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanFeesPaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":false,"internalType":"string","name":"note","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"LoanNoteLogged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanPrincipalRepaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newFeeBps","type":"uint256"}],"name":"PerformanceFeeUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"solver","type":"address"},{"indexed":false,"internalType":"bool","name":"isWhitelisted","type":"bool"}],"name":"SolverAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"YieldDistributedToInvestors","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldVault","type":"address"},{"indexed":true,"internalType":"address","name":"newVault","type":"address"}],"name":"YieldVaultAddressUpdated","type":"event"},{"inputs":[],"name":"capitalToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"depositCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"solver","type":"address"},{"internalType":"uint256","name":"_loanAmount","type":"uint256"}],"name":"disburseLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getKernelBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_solver","type":"address"}],"name":"getLoanPrincipal","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"investorVaultAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"loanPrincipals","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"note","type":"string"}],"name":"logLoanNote","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"performanceFeeBps","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_newInvestorVault","type":"address"}],"name":"setInvestorVaultAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_newFeeBps","type":"uint256"}],"name":"setPerformanceFee","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_solver","type":"address"},{"internalType":"bool","name":"_whitelisted","type":"bool"}],"name":"setSolverAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newYieldVault","type":"address"}],"name":"setYieldVaultAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_principalAmount","type":"uint256"},{"internalType":"uint256","name":"_feeAmount","type":"uint256"}],"name":"settleLoanFromBalance","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalCapitalDeployed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalFeesProcessedViaKernel","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"whitelistedSolvers","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"address","name":"_recipient","type":"address"}],"name":"withdrawSurplusCapital","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"yieldVaultAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]`)
     };
 
     // --- Main Functions ---
@@ -230,6 +226,7 @@
 
             document.getElementById('walletStatus').innerHTML = `<p class="text-green-400 font-semibold">Connected</p>`;
             document.getElementById('walletAddress').textContent = currentAddress;
+            document.getElementById('kernelContractAddressForTransfer').textContent = addresses.kernel;
             document.getElementById('userSection').classList.remove('hidden');
 
             isSolver = await kernelContract.whitelistedSolvers(currentAddress); // Assign to global isSolver
@@ -244,7 +241,6 @@
                 fetchAllDaoData();
             }
             
-            checkAllAllowances();
             fetchUserData();
             await setupEventListeners();
         } catch (error) {
@@ -271,19 +267,13 @@
 
     async function fetchSolverData() {
         try {
-            const loanDetails = await kernelContract.getLoanDetails(currentAddress);
-            const principal = loanDetails.principal;
-            const interest = loanDetails.interest;
+            const principal = await kernelContract.getLoanPrincipal(currentAddress);
 
-            if (principal === 0n && interest === 0n) {
+            if (principal === 0n) {
                  throw new Error("No outstanding loan found.");
             }
 
-            const totalDue = principal + interest;
-
             document.getElementById('solverLoanPrincipal').textContent = `${parseFloat(ethers.formatUnits(principal, 6)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC`;
-            document.getElementById('solverLoanInterest').textContent = `${parseFloat(ethers.formatUnits(interest, 6)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC`;
-            document.getElementById('solverTotalDue').textContent = `${parseFloat(ethers.formatUnits(totalDue, 6)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC`;
 
         } catch (err) {
              console.error("Error fetching solver data:", err);
@@ -320,26 +310,38 @@
     }
 
     // --- User Actions ---
-    async function deposit() {
-        await handleTransaction('depositAmount', addresses.investorVault, 'Deposit', investorVaultContract, 'deposit');
+     async function approveAndDeposit() {
+        await handleApprovalAndTransaction(
+            'depositAmount',
+            addresses.investorVault,
+            "Deposit",
+            investorVaultContract,
+            'deposit'
+        );
     }
     
     async function claimYield() {
-        await handleTransaction(investorVaultContract, 'claimYield', [], "Claim Yield");
+        await handleSimpleTransaction(investorVaultContract, 'claimYield', [], "Claim Yield");
     }
 
     async function compoundYield() {
-        await handleTransaction(investorVaultContract, 'compoundYield', [], "Compound Yield");
+        await handleSimpleTransaction(investorVaultContract, 'compoundYield', [], "Compound Yield");
     }
 
     async function withdraw() {
         if (shareAmount === 0n) return showModal("Withdraw Error", "You have no shares to withdraw.");
-        await handleTransaction(investorVaultContract, 'withdraw', [shareAmount], "Withdraw All");
+        await handleSimpleTransaction(investorVaultContract, 'withdraw', [shareAmount], "Withdraw All");
     }
 
     // --- DAO & Solver Actions ---
-    async function fundKernel() {
-        await handleTransaction('kernelAmount', addresses.kernel, 'Fund Kernel', kernelContract, 'depositCapital');
+    async function approveAndFundKernel() {
+         await handleApprovalAndTransaction(
+            'kernelAmount',
+            addresses.kernel,
+            "Fund Kernel",
+            kernelContract,
+            'depositCapital'
+        );
     }
 
     async function setPerformanceFee() {
@@ -347,36 +349,44 @@
         if (!feeBps || isNaN(feeBps) || feeBps < 0 || feeBps > 10000) {
             return showModal("Input Error", "Please enter a valid fee in basis points (0-10000).");
         }
-        await handleTransaction(kernelContract, 'setPerformanceFee', [BigInt(feeBps)], "Set Performance Fee");
+        await handleSimpleTransaction(kernelContract, 'setPerformanceFee', [BigInt(feeBps)], "Set Performance Fee");
     }
 
-    async function repayLoan() {
-        await handleTransaction('repayAmount', addresses.kernel, "Repay Loan", kernelContract, 'recordLoanPrincipalRepayment');
+    async function settleLoan() {
+        const principalAmount = document.getElementById('settlePrincipalAmount').value;
+        const feeAmount = document.getElementById('settleFeeAmount').value;
+        if (!principalAmount || isNaN(principalAmount) || Number(principalAmount) <= 0) {
+            return showModal("Input Error", "Please enter a valid Principal amount.");
+        }
+        if (!feeAmount || isNaN(feeAmount) || Number(feeAmount) < 0) { 
+            return showModal("Input Error", "Please enter a valid Fee/Profit amount.");
+        }
+
+        const principalInUnits = ethers.parseUnits(principalAmount, 6);
+        const feeInUnits = ethers.parseUnits(feeAmount, 6);
+
+        await handleSimpleTransaction(kernelContract, 'settleLoanFromBalance', [principalInUnits, feeInUnits], "Settle Loan");
     }
    
-    async function processFees() {
-        await handleTransaction('feeAmount', addresses.kernel, "Process Fees", kernelContract, 'processSolverFees');
-    }
-
     async function sweepFees() {
         const amount = document.getElementById('sweepAmount').value;
         if (amount && Number(amount) > 0) {
-            await handleTransaction(yieldVaultContract, 'sweepToTreasury', [ethers.parseUnits(amount, 6)], "Sweep Fees");
+            await handleSimpleTransaction(yieldVaultContract, 'sweepToTreasury', [ethers.parseUnits(amount, 6)], "Sweep Fees");
         } else {
-            await handleTransaction(yieldVaultContract, 'sweepFullBalanceToTreasury', [], "Sweep Full Balance");
+            await handleSimpleTransaction(yieldVaultContract, 'sweepFullBalanceToTreasury', [], "Sweep Full Balance");
         }
     }
 
     async function addSolver() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
-        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, true], "Add Solver");
+        await handleSimpleTransaction(kernelContract, 'setSolverAddress', [solverAddress, true], "Add Solver");
     }
 
     async function removeSolver() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
-        await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, false], "Remove Solver");
+        await handleSimpleTransaction(kernelContract, 'setSolverAddress', [solverAddress, false], "Remove Solver");
     }
 
     async function checkSolverStatus() {
@@ -391,22 +401,13 @@
             
             if (isWhitelisted) {
                 try {
-                    const loanDetails = await kernelContract.getLoanDetails(solverAddress);
-                    const principal = loanDetails.principal;
-                    const interest = loanDetails.interest;
-
+                    const principal = await kernelContract.getLoanPrincipal(solverAddress);
                     if (principal > 0n) {
-                         const totalDue = principal + interest;
                          const principalFormatted = parseFloat(ethers.formatUnits(principal, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                         const interestFormatted = parseFloat(ethers.formatUnits(interest, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                         const totalDueFormatted = parseFloat(ethers.formatUnits(totalDue, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
                          message += `
                             <div class="mt-4 text-left p-3 bg-gray-700 rounded-md">
                                 <h4 class="font-semibold text-white mb-1">Outstanding Loan:</h4>
                                 <p>Principal: <span class="font-bold text-cyan-400">${principalFormatted} USDC</span></p>
-                                <p>Interest: <span class="font-bold text-red-400">${interestFormatted} USDC</span></p>
-                                <p>Total Due: <span class="font-bold text-yellow-400">${totalDueFormatted} USDC</span></p>
                             </div>
                         `;
                     } else {
@@ -415,7 +416,7 @@
 
                 } catch (loanError) {
                      console.error("Could not fetch loan details for solver:", loanError);
-                     message += '<div class="text-gray-400 mt-2 text-left">This solver has no active loan.</div>';
+                     message += '<div class="text-gray-400 mt-2 text-left">Could not fetch loan details.</div>';
                 }
             }
             
@@ -432,17 +433,17 @@
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid solver address.");
         if (!amount || isNaN(amount) || Number(amount) <= 0) return showModal("Input Error", "Please enter a valid amount to disburse.");
         const amountInUnits = ethers.parseUnits(amount, 6);
-        await handleTransaction(kernelContract, 'disburseLoan', [solverAddress, amountInUnits], "Disburse Loan");
+        await handleSimpleTransaction(kernelContract, 'disburseLoan', [solverAddress, amountInUnits], "Disburse Loan");
     }
     async function daoBatchClaim() {
         const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(addr => ethers.isAddress(addr));
         if (addresses.length === 0) return showModal("Input Error", "Please provide at least one valid address.");
-        await handleTransaction(investorVaultContract, 'batchClaimYield', [addresses], "Batch Claim");
+        await handleSimpleTransaction(investorVaultContract, 'batchClaimYield', [addresses], "Batch Claim");
     }
     async function daoBatchWithdraw() {
         const addresses = document.getElementById('batchAddresses').value.split(/[\s,]+/).filter(addr => ethers.isAddress(addr));
         if (addresses.length === 0) return showModal("Input Error", "Please provide at least one valid address.");
-        await handleTransaction(investorVaultContract, 'batchWithdraw', [addresses], "Batch Withdraw");
+        await handleSimpleTransaction(investorVaultContract, 'batchWithdraw', [addresses], "Batch Withdraw");
     }
     
     // --- Event Handling & Logging ---
@@ -495,93 +496,60 @@
     }
 
     // --- Generic Handlers ---
-    async function checkAllowanceAndEnableButton(buttonId, spender) {
-        const actionButton = document.getElementById(buttonId);
-        try {
-            const allowance = await usdcContract.allowance(currentAddress, spender);
-            // Enable button if allowance is effectively infinite (a very large number)
-            if (allowance >= ethers.parseUnits('1000000', 6)) { // Check for a large allowance
-                actionButton.disabled = false;
-            } else {
-                actionButton.disabled = true;
-            }
-        } catch(e) {
-            console.error("Could not check allowance:", e);
-            actionButton.disabled = true;
+    async function handleApprovalAndTransaction(inputId, spender, name, contractInstance, method) {
+        const input = document.getElementById(inputId);
+        const amount = input.value;
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+            return showModal("Input Error", "Please enter a valid amount.");
         }
-    }
-
-    async function checkAllAllowances() {
-        if (!usdcContract || !currentAddress) return;
-        await checkAllowanceAndEnableButton('depositBtn', addresses.investorVault);
-        await checkAllowanceAndEnableButton('fundKernelBtn', addresses.kernel);
-        await checkAllowanceAndEnableButton('repayLoanBtn', addresses.kernel);
-        await checkAllowanceAndEnableButton('payFeesBtn', addresses.kernel);
-    }
-
-    async function handleMaxApproval(buttonId, spender) {
-        showModal("Processing", "Requesting max approval from your wallet...");
-        const actionButton = document.getElementById(buttonId);
+        
+        const amountInUnits = ethers.parseUnits(amount, 6);
+        const actionButton = input.nextElementSibling;
         actionButton.disabled = true;
+
         try {
-            const approveTx = await usdcContract.approve(spender, ethers.MaxUint256);
-            await approveTx.wait();
-            showModal("Success", "Max approval successful! You can now make transactions.");
-            actionButton.disabled = false;
+            const currentAllowance = await usdcContract.allowance(currentAddress, spender);
+            if(currentAllowance < amountInUnits) {
+                showModal("Processing (Step 1/2)", `Requesting approval for ${amount} USDC...`);
+                const approveTx = await usdcContract.approve(spender, amountInUnits);
+                await approveTx.wait();
+                showModal("Success (Step 1/2)", `Approval confirmed. Now processing transaction...`);
+            }
+
+            // --- Transaction Step ---
+            const tx = await contractInstance[method](amountInUnits);
+            await tx.wait();
+            showModal("Success", `${name} transaction was successful!`);
+            
+            // --- Refresh Data ---
+            fetchUserData();
+            if (isSolver) fetchSolverData();
+            if (!document.getElementById('daoTools').classList.contains('hidden')) fetchAllDaoData();
+
         } catch (error) {
-            console.error("Max Approval failed:", error);
-            showModal("Error", `Max Approval failed: ${error?.reason || error.message}`);
+            console.error(`${name} failed:`, error);
+            showModal("Error", `${name} failed: ${error?.reason || error.data?.message || error.message}`);
+        } finally {
+            input.value = ''; // Reset input field
+            actionButton.disabled = false;
         }
     }
-
-
-    async function handleTransaction(contractInstanceOrInputId, spenderOrMethod, nameOrArgs, contractInstance, method) {
-        if(typeof contractInstanceOrInputId === 'string'){
-            // This is a transaction that needs prior approval check
-            const inputId = contractInstanceOrInputId;
-            const spender = spenderOrMethod;
-            const name = nameOrArgs;
+    
+    async function handleSimpleTransaction(contractInstance, method, args = [], name) {
+        showModal("Processing", `Sending ${name} transaction... Please confirm in your wallet.`);
+        try {
+            const tx = await contractInstance[method](...args);
+            await tx.wait();
+            showModal("Success", `${name} transaction was successful!`);
             
-            const input = document.getElementById(inputId);
-            const amount = input.value;
-            if (!amount || isNaN(amount) || Number(amount) <= 0) {
-                return showModal("Input Error", "Please enter a valid amount.");
-            }
-            const amountInUnits = ethers.parseUnits(amount, 6);
-            
-            showModal("Processing", `Sending ${name} transaction...`);
-            try {
-                const tx = await contractInstance[method](amountInUnits);
-                await tx.wait();
-                showModal("Success", `${name} transaction successful!`);
-                input.value = '';
-            } catch(e) {
-                console.error(`${name} failed`, e);
-                showModal("Error", `${name} failed: ${e?.reason || e.message}`);
-            }
-
-        } else {
-             // This is a transaction that does NOT need prior approval (e.g. claim)
-            const contract = contractInstanceOrInputId;
-            const methodName = spenderOrMethod;
-            const args = nameOrArgs;
-            const name = contractInstance; // fourth argument is the name
-            
-            showModal("Processing", `Sending ${name} transaction...`);
-            try {
-                const tx = await contract[methodName](...args);
-                await tx.wait();
-                showModal("Success", `${name} transaction successful!`);
-            } catch(e) {
-                console.error(`${name} failed`, e);
-                showModal("Error", `${name} failed: ${e?.reason || e.message}`);
-            }
+            // Refetch all data to update the UI
+            fetchUserData();
+            if (isSolver) fetchSolverData();
+            if (!document.getElementById('daoTools').classList.contains('hidden')) fetchAllDaoData();
+        } catch (error) {
+            console.error(`${name} failed:`, error);
+            showModal("Error", `${name} failed: ${error?.reason || error.data?.message || error.message}`);
         }
-
-        // --- Refresh Data ---
-        fetchUserData();
-        if (isSolver) fetchSolverData();
-        if (!document.getElementById('daoTools').classList.contains('hidden')) fetchAllDaoData();
     }
     
     // --- UI Utility ---
@@ -602,15 +570,28 @@
         document.body.appendChild(modal);
     }
     
+    function copyToClipboard(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showModal("Copied!", "Address copied to clipboard.");
+        } catch (err) {
+            showModal("Error", "Failed to copy address.");
+        }
+        document.body.removeChild(ta);
+    }
+    
     // --- Expose functions to global scope for HTML onclick handlers ---
     window.connectWallet = connectWallet;
-    window.deposit = deposit;
+    window.approveAndDeposit = approveAndDeposit;
     window.claimYield = claimYield;
     window.compoundYield = compoundYield;
     window.withdraw = withdraw;
-    window.fundKernel = fundKernel;
-    window.repayLoan = repayLoan;
-    window.processFees = processFees;
+    window.approveAndFundKernel = approveAndFundKernel;
+    window.settleLoan = settleLoan;
     window.sweepFees = sweepFees;
     window.setPerformanceFee = setPerformanceFee;
     window.addSolver = addSolver;
@@ -619,7 +600,7 @@
     window.disburseLoan = disburseLoan;
     window.daoBatchClaim = daoBatchClaim;
     window.daoBatchWithdraw = daoBatchWithdraw;
-    window.handleMaxApproval = handleMaxApproval;
+    window.copyToClipboard = copyToClipboard;
 
 </script>
 
