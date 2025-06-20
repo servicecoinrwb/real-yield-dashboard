@@ -193,10 +193,12 @@
 
 <script>
     // --- Global Scope Variables ---
-    var provider, signer, usdcContract, investorVaultContract, yieldVaultContract, kernelContract;
-    var currentAddress;
-    var shareAmount = 0n;
-    var isSolver = false;
+    if (typeof provider === 'undefined') {
+        var provider, signer, usdcContract, investorVaultContract, yieldVaultContract, kernelContract;
+        var currentAddress;
+        var shareAmount = 0n;
+        var isSolver = false;
+    }
 
     // --- Contract Addresses & ABIs ---
     const addresses = {
