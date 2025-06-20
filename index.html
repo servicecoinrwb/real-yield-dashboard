@@ -53,17 +53,17 @@
                         <label class="block mb-1 text-sm font-semibold">Repay Loan Principal to Kernel (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button onclick="approveAndRepayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Repay</button>
+                            <button id="repayLoanBtn" onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Repay</button>
                         </div>
-                         <p class="text-xs text-gray-400 mt-1">Repay the principal loan amount.</p>
+                         <button onclick="handleMaxApproval('repayLoanBtn', addresses.kernel)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
                     </div>
                     <div>
                         <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                             <button onclick="approveAndProcessFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Pay Fees</button>
+                             <button id="payFeesBtn" onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Pay Fees</button>
                         </div>
-                         <p class="text-xs text-gray-400 mt-1">Send the profit/interest portion of a repayment.</p>
+                        <button onclick="handleMaxApproval('payFeesBtn', addresses.kernel)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
                     </div>
                 </div>
              </div>
@@ -89,9 +89,9 @@
                         <label class="block mb-1 text-sm font-semibold">Deposit USDC to Investor Vault:</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="depositAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600 focus:ring-orange-500 focus:border-orange-500" />
-                            <button onclick="approveAndDeposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Deposit</button>
+                            <button id="depositBtn" onclick="deposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Deposit</button>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">Approves and deposits in a single flow.</p>
+                         <button onclick="handleMaxApproval('depositBtn', addresses.investorVault)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
                     </div>
                     <div class="flex flex-wrap justify-around gap-3 mt-3">
                         <button onclick="claimYield()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md font-semibold flex-grow">Claim Yield</button>
@@ -127,9 +127,9 @@
                         <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button onclick="approveAndFundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Fund</button>
+                            <button id="fundKernelBtn" onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full" disabled>Fund Kernel</button>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel.</p>
+                        <button onclick="handleMaxApproval('fundKernelBtn', addresses.kernel)" class="text-xs text-orange-400 hover:underline mt-1">Approve Spending</button>
                     </div>
                      <div>
                         <label class="block mb-1 text-sm font-semibold">Set DAO Performance Fee:</label>
@@ -243,7 +243,8 @@
                 document.getElementById('daoTools').classList.remove('hidden');
                 fetchAllDaoData();
             }
-
+            
+            checkAllAllowances();
             fetchUserData();
             await setupEventListeners();
         } catch (error) {
@@ -319,14 +320,8 @@
     }
 
     // --- User Actions ---
-    async function approveAndDeposit() {
-        await handleApprovalAndTransaction(
-            'depositAmount',
-            addresses.investorVault,
-            "Deposit",
-            investorVaultContract,
-            'deposit'
-        );
+    async function deposit() {
+        await handleTransaction('depositAmount', addresses.investorVault, 'Deposit', investorVaultContract, 'deposit');
     }
     
     async function claimYield() {
@@ -343,14 +338,8 @@
     }
 
     // --- DAO & Solver Actions ---
-    async function approveAndFundKernel() {
-         await handleApprovalAndTransaction(
-            'kernelAmount',
-            addresses.kernel,
-            "Fund Kernel",
-            kernelContract,
-            'depositCapital'
-        );
+    async function fundKernel() {
+        await handleTransaction('kernelAmount', addresses.kernel, 'Fund Kernel', kernelContract, 'depositCapital');
     }
 
     async function setPerformanceFee() {
@@ -361,24 +350,12 @@
         await handleTransaction(kernelContract, 'setPerformanceFee', [BigInt(feeBps)], "Set Performance Fee");
     }
 
-    async function approveAndRepayLoan() {
-        await handleApprovalAndTransaction(
-            'repayAmount',
-            addresses.kernel,
-            "Repay Loan",
-            kernelContract,
-            'recordLoanPrincipalRepayment'
-        );
+    async function repayLoan() {
+        await handleTransaction('repayAmount', addresses.kernel, "Repay Loan", kernelContract, 'recordLoanPrincipalRepayment');
     }
    
-    async function approveAndProcessFees() {
-        await handleApprovalAndTransaction(
-            'feeAmount',
-            addresses.kernel,
-            "Process Fees",
-            kernelContract,
-            'processSolverFees'
-        );
+    async function processFees() {
+        await handleTransaction('feeAmount', addresses.kernel, "Process Fees", kernelContract, 'processSolverFees');
     }
 
     async function sweepFees() {
@@ -518,75 +495,93 @@
     }
 
     // --- Generic Handlers ---
-    async function handleApprovalAndTransaction(inputId, spender, name, contractInstance, method) {
-        const input = document.getElementById(inputId);
-        const amount = input.value;
-        if (!amount || isNaN(amount) || Number(amount) <= 0) {
-            return showModal("Input Error", "Please enter a valid amount.");
-        }
-        
-        const amountInUnits = ethers.parseUnits(amount, 6);
-        const actionButton = input.nextElementSibling;
-        actionButton.disabled = true;
-
+    async function checkAllowanceAndEnableButton(buttonId, spender) {
+        const actionButton = document.getElementById(buttonId);
         try {
-            // --- Approval Step ---
-            showModal("Processing (Step 1/3)", `Requesting approval for ${amount} USDC...`);
-            const approveTx = await usdcContract.approve(spender, amountInUnits);
-            showModal("Processing (Step 2/3)", `Waiting for approval transaction to be confirmed...`);
-            await approveTx.wait();
-            
-            // --- Verification Step ---
-            showModal("Processing (Step 3/3)", "Verifying approval...");
-             const poll = async (retries = 30) => {
-                if (retries === 0) throw new Error("Allowance verification timed out. Please try again.");
-                const currentAllowance = await usdcContract.allowance(currentAddress, spender);
-                if (currentAllowance >= amountInUnits) return;
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                return poll(retries - 1);
-            };
-            await poll();
-            
-            showModal("Success (Approval Verified)", `Approval confirmed. Now processing ${name} transaction...`);
-
-            // --- Transaction Step ---
-            const tx = await contractInstance[method](amountInUnits);
-            await tx.wait();
-            showModal("Success", `${name} transaction was successful!`);
-            
-            // --- Refresh Data ---
-            fetchUserData();
-            if (isSolver) fetchSolverData();
-            if (!document.getElementById('daoTools').classList.contains('hidden')) fetchAllDaoData();
-
-        } catch (error) {
-            console.error(`${name} failed:`, error);
-            showModal("Error", `${name} failed: ${error?.reason || error.data?.message || error.message}`);
-        } finally {
-            input.value = ''; // Reset input field
-            actionButton.disabled = false; // Re-enable button
+            const allowance = await usdcContract.allowance(currentAddress, spender);
+            // Enable button if allowance is effectively infinite (a very large number)
+            if (allowance >= ethers.parseUnits('1000000', 6)) { // Check for a large allowance
+                actionButton.disabled = false;
+            } else {
+                actionButton.disabled = true;
+            }
+        } catch(e) {
+            console.error("Could not check allowance:", e);
+            actionButton.disabled = true;
         }
     }
 
-    async function handleTransaction(contractInstance, method, args = [], name) {
-        showModal("Processing", `Sending ${name} transaction... Please confirm in your wallet.`);
+    async function checkAllAllowances() {
+        if (!usdcContract || !currentAddress) return;
+        await checkAllowanceAndEnableButton('depositBtn', addresses.investorVault);
+        await checkAllowanceAndEnableButton('fundKernelBtn', addresses.kernel);
+        await checkAllowanceAndEnableButton('repayLoanBtn', addresses.kernel);
+        await checkAllowanceAndEnableButton('payFeesBtn', addresses.kernel);
+    }
+
+    async function handleMaxApproval(buttonId, spender) {
+        showModal("Processing", "Requesting max approval from your wallet...");
+        const actionButton = document.getElementById(buttonId);
+        actionButton.disabled = true;
         try {
-            const tx = await contractInstance[method](...args);
-            await tx.wait();
-            showModal("Success", `${name} transaction was successful!`);
-            
-            // Refetch all data to update the UI
-            fetchUserData();
-            if (isSolver) {
-                fetchSolverData();
-            }
-            if (!document.getElementById('daoTools').classList.contains('hidden')) {
-                 fetchAllDaoData();
-            }
+            const approveTx = await usdcContract.approve(spender, ethers.MaxUint256);
+            await approveTx.wait();
+            showModal("Success", "Max approval successful! You can now make transactions.");
+            actionButton.disabled = false;
         } catch (error) {
-            console.error(`${name} failed:`, error);
-            showModal("Error", `${name} failed: ${error?.reason || error.data?.message || error.message}`);
+            console.error("Max Approval failed:", error);
+            showModal("Error", `Max Approval failed: ${error?.reason || error.message}`);
         }
+    }
+
+
+    async function handleTransaction(contractInstanceOrInputId, spenderOrMethod, nameOrArgs, contractInstance, method) {
+        if(typeof contractInstanceOrInputId === 'string'){
+            // This is a transaction that needs prior approval check
+            const inputId = contractInstanceOrInputId;
+            const spender = spenderOrMethod;
+            const name = nameOrArgs;
+            
+            const input = document.getElementById(inputId);
+            const amount = input.value;
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
+                return showModal("Input Error", "Please enter a valid amount.");
+            }
+            const amountInUnits = ethers.parseUnits(amount, 6);
+            
+            showModal("Processing", `Sending ${name} transaction...`);
+            try {
+                const tx = await contractInstance[method](amountInUnits);
+                await tx.wait();
+                showModal("Success", `${name} transaction successful!`);
+                input.value = '';
+            } catch(e) {
+                console.error(`${name} failed`, e);
+                showModal("Error", `${name} failed: ${e?.reason || e.message}`);
+            }
+
+        } else {
+             // This is a transaction that does NOT need prior approval (e.g. claim)
+            const contract = contractInstanceOrInputId;
+            const methodName = spenderOrMethod;
+            const args = nameOrArgs;
+            const name = contractInstance; // fourth argument is the name
+            
+            showModal("Processing", `Sending ${name} transaction...`);
+            try {
+                const tx = await contract[methodName](...args);
+                await tx.wait();
+                showModal("Success", `${name} transaction successful!`);
+            } catch(e) {
+                console.error(`${name} failed`, e);
+                showModal("Error", `${name} failed: ${e?.reason || e.message}`);
+            }
+        }
+
+        // --- Refresh Data ---
+        fetchUserData();
+        if (isSolver) fetchSolverData();
+        if (!document.getElementById('daoTools').classList.contains('hidden')) fetchAllDaoData();
     }
     
     // --- UI Utility ---
@@ -609,13 +604,13 @@
     
     // --- Expose functions to global scope for HTML onclick handlers ---
     window.connectWallet = connectWallet;
-    window.approveAndDeposit = approveAndDeposit;
+    window.deposit = deposit;
     window.claimYield = claimYield;
     window.compoundYield = compoundYield;
     window.withdraw = withdraw;
-    window.approveAndFundKernel = approveAndFundKernel;
-    window.approveAndRepayLoan = approveAndRepayLoan;
-    window.approveAndProcessFees = approveAndProcessFees;
+    window.fundKernel = fundKernel;
+    window.repayLoan = repayLoan;
+    window.processFees = processFees;
     window.sweepFees = sweepFees;
     window.setPerformanceFee = setPerformanceFee;
     window.addSolver = addSolver;
@@ -624,6 +619,7 @@
     window.disburseLoan = disburseLoan;
     window.daoBatchClaim = daoBatchClaim;
     window.daoBatchWithdraw = daoBatchWithdraw;
+    window.handleMaxApproval = handleMaxApproval;
 
 </script>
 
