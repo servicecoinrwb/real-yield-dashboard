@@ -31,16 +31,40 @@
         </div>
 
         <div id="solverSection" class="hidden text-left space-y-6 mb-6">
-             <div class="bg-gray-800 p-5 rounded-lg shadow-lg border-2 border-yellow-500">
-                <h2 class="text-xl font-semibold text-yellow-300 mb-3 border-b border-gray-700 pb-2">Your Solver Loan Status</h2>
-                <div id="solverLoanInfo" class="space-y-2 text-md">
-                    <p>Outstanding Loan Principal: <span id="solverLoanPrincipal" class="font-bold text-cyan-400">...</span></p>
-                    <p>Accrued Interest: <span id="solverLoanInterest" class="font-bold text-red-400">...</span></p>
-                    <hr class="border-gray-700 my-3">
-                    <p class="text-lg">Total Amount Due: <span id="solverTotalDue" class="font-bold text-yellow-400">...</span></p>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border-2 border-yellow-500">
+                    <h2 class="text-xl font-semibold text-yellow-300 mb-3 border-b border-gray-700 pb-2">Your Solver Loan Status</h2>
+                    <div id="solverLoanInfo" class="space-y-2 text-md">
+                        <p>Outstanding Loan Principal: <span id="solverLoanPrincipal" class="font-bold text-cyan-400">...</span></p>
+                        <p>Accrued Interest: <span id="solverLoanInterest" class="font-bold text-red-400">...</span></p>
+                        <hr class="border-gray-700 my-3">
+                        <p class="text-lg">Total Amount Due: <span id="solverTotalDue" class="font-bold text-yellow-400">...</span></p>
+                    </div>
+                     <p class="text-xs text-gray-400 mt-3">This section is visible because you are a whitelisted solver.</p>
                 </div>
-                 <p class="text-xs text-gray-400 mt-3">This section is visible because you are a whitelisted solver.</p>
-            </div>
+
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border-2 border-yellow-500 space-y-4">
+                     <h2 class="text-xl font-semibold text-yellow-300 mb-3 border-b border-gray-700 pb-2">Solver Actions</h2>
+                     <div>
+                        <label class="block mb-1 text-sm font-semibold">Repay Loan Principal to Kernel (USDC):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                            <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay</button>
+                        </div>
+                         <p class="text-xs text-gray-400 mt-1">Repay the principal loan amount.</p>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="approveProcessFees()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
+                            <button onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Pay</button>
+                        </div>
+                         <p class="text-xs text-gray-400 mt-1">Send the profit/interest portion of a repayment.</p>
+                    </div>
+                </div>
+             </div>
         </div>
 
         <div id="userSection" class="hidden text-left space-y-6">
@@ -127,7 +151,7 @@
 
                 <!-- Solver & Loan Management -->
                 <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700 space-y-4">
-                    <h3 class="text-xl font-semibold text-orange-300 mb-2 border-b border-gray-700 pb-2">Solver & Loan Management</h3>
+                    <h3 class="text-xl font-semibold text-orange-300 mb-2 border-b border-gray-700 pb-2">Solver & Loan Management (Admin)</h3>
                      <div>
                         <label class="block mb-1 text-sm font-semibold">Manage Solver Whitelist:</label>
                         <div class="flex flex-col sm:flex-row gap-2">
@@ -145,24 +169,6 @@
                              <button onclick="disburseLoan()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Disburse Loan</button>
                         </div>
                          <p class="text-xs text-gray-400 mt-1">Sends funds from the Kernel to a whitelisted solver.</p>
-                    </div>
-                     <div>
-                        <label class="block mb-1 text-sm font-semibold">Repay Loan Principal to Kernel (USDC):</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                            <button onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Repay</button>
-                        </div>
-                         <p class="text-xs text-gray-400 mt-1">For solvers to repay the principal loan amount.</p>
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button onclick="approveProcessFees()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                            <button onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold">Pay</button>
-                        </div>
-                         <p class="text-xs text-gray-400 mt-1">For solvers to send the profit/interest portion of a repayment.</p>
                     </div>
                 </div>
             </div>
@@ -249,13 +255,13 @@
     async function fetchUserData() {
         try {
             const nativeBalance = await usdcContract.balanceOf(currentAddress);
-            document.getElementById('nativeUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(nativeBalance, 6)).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })} USDC`;
+            document.getElementById('nativeUsdcBalance').textContent = `${parseFloat(ethers.formatUnits(nativeBalance, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} USDC`;
 
             const info = await investorVaultContract.getInvestorInfo(currentAddress);
             shareAmount = info.share;
             const claimable = ethers.formatUnits(info.claimable, 6);
-            document.getElementById('userShares').textContent = parseFloat(ethers.formatUnits(shareAmount, 6)).toLocaleString();
-            document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toFixed(4)}`;
+            document.getElementById('userShares').textContent = parseFloat(ethers.formatUnits(shareAmount, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('claimableYield').textContent = `$${parseFloat(claimable).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
         } catch (err) {
             console.error("Error fetching user data:", err);
             // Don't show modal for passive data fetch errors
@@ -276,9 +282,9 @@
 
             const totalDue = principal + interest;
 
-            document.getElementById('solverLoanPrincipal').textContent = `${parseFloat(ethers.formatUnits(principal, 6)).toLocaleString()} USDC`;
-            document.getElementById('solverLoanInterest').textContent = `${parseFloat(ethers.formatUnits(interest, 6)).toLocaleString()} USDC`;
-            document.getElementById('solverTotalDue').textContent = `${parseFloat(ethers.formatUnits(totalDue, 6)).toLocaleString()} USDC`;
+            document.getElementById('solverLoanPrincipal').textContent = `${parseFloat(ethers.formatUnits(principal, 6)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC`;
+            document.getElementById('solverLoanInterest').textContent = `${parseFloat(ethers.formatUnits(interest, 6)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC`;
+            document.getElementById('solverTotalDue').textContent = `${parseFloat(ethers.formatUnits(totalDue, 6)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC`;
 
         } catch (err) {
              console.error("Error fetching solver data:", err);
@@ -392,12 +398,16 @@
 
                     if (principal > 0n) {
                          const totalDue = principal + interest;
+                         const principalFormatted = parseFloat(ethers.formatUnits(principal, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                         const interestFormatted = parseFloat(ethers.formatUnits(interest, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                         const totalDueFormatted = parseFloat(ethers.formatUnits(totalDue, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
                          message += `
                             <div class="mt-4 text-left p-3 bg-gray-700 rounded-md">
                                 <h4 class="font-semibold text-white mb-1">Outstanding Loan:</h4>
-                                <p>Principal: <span class="font-bold text-cyan-400">${ethers.formatUnits(principal, 6)} USDC</span></p>
-                                <p>Interest: <span class="font-bold text-red-400">${ethers.formatUnits(interest, 6)} USDC</span></p>
-                                <p>Total Due: <span class="font-bold text-yellow-400">${ethers.formatUnits(totalDue, 6)} USDC</span></p>
+                                <p>Principal: <span class="font-bold text-cyan-400">${principalFormatted} USDC</span></p>
+                                <p>Interest: <span class="font-bold text-red-400">${interestFormatted} USDC</span></p>
+                                <p>Total Due: <span class="font-bold text-yellow-400">${totalDueFormatted} USDC</span></p>
                             </div>
                         `;
                     } else {
@@ -471,7 +481,7 @@
                     if (typeof value === 'bigint') {
                          try {
                              // Attempt to format as USDC if it's likely a token amount
-                             if (value > 10000n) displayValue = `${ethers.formatUnits(value, 6)}`;
+                             if (value > 10000n) displayValue = `${parseFloat(ethers.formatUnits(value, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                          } catch {}
                     }
                     if (typeof value === 'string' && value.startsWith('0x')) {
