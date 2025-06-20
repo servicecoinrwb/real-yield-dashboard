@@ -97,6 +97,24 @@
                 </div>
             </div>
         </div>
+
+        <div id="sharedComponents" class="hidden text-left space-y-6 mt-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700">
+                    <h3 class="text-xl font-semibold text-orange-300 mb-3 border-b border-gray-700 pb-2">Batch Operations</h3>
+                    <textarea id="batchAddresses" placeholder="Enter investor addresses, one per line" class="w-full p-2 bg-gray-700 text-white rounded-md border border-gray-600 h-24"></textarea>
+                    <div class="space-x-3 mt-2">
+                      <button onclick="daoBatchClaim()" class="bg-green-800 hover:bg-green-900 px-4 py-2 rounded-md font-semibold">Batch Claim</button>
+                      <button onclick="daoBatchWithdraw()" class="bg-red-800 hover:bg-red-900 px-4 py-2 rounded-md font-semibold">Batch Withdraw</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700">
+                    <h3 class="text-xl font-semibold text-orange-300 mb-2">📜 Transaction Log</h3>
+                    <ul id="eventLog" class="text-sm text-gray-300 space-y-1 h-48 overflow-y-auto bg-gray-900 p-2 rounded-md"></ul>
+                </div>
+            </div>
+        </div>
         
         <div id="daoTools" class="hidden mt-8 border-t-2 border-orange-400 pt-6 text-left space-y-6">
             <h2 class="text-2xl font-semibold text-orange-300 mb-4 text-center">DAO & Solver Tools</h2>
@@ -232,6 +250,7 @@
                 fetchAllDaoData();
             }
             
+            document.getElementById('sharedComponents').classList.remove('hidden');
             fetchUserData();
             await setupEventListeners();
         } catch (error) {
