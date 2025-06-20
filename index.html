@@ -536,12 +536,14 @@
             
             // --- Verification Step ---
             showModal("Processing (Step 3/3)", "Verifying approval...");
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Delay for RPC sync
-
-            const currentAllowance = await usdcContract.allowance(currentAddress, spender);
-            if (currentAllowance < amountInUnits) {
-                throw new Error("Allowance verification failed. Please try again.");
-            }
+             const poll = async (retries = 30) => {
+                if (retries === 0) throw new Error("Allowance verification timed out. Please try again.");
+                const currentAllowance = await usdcContract.allowance(currentAddress, spender);
+                if (currentAllowance >= amountInUnits) return;
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                return poll(retries - 1);
+            };
+            await poll();
             
             showModal("Success (Approval Verified)", `Approval confirmed. Now processing ${name} transaction...`);
 
@@ -624,4 +626,4 @@
 </script>
 
 </body>
-</ht
+</html>
