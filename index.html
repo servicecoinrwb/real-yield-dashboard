@@ -119,6 +119,14 @@
                 <!-- Capital & Fee Management -->
                 <div class="bg-gray-800 p-5 rounded-lg shadow-lg border border-gray-700 space-y-4">
                     <h3 class="text-xl font-semibold text-orange-300 mb-2 border-b border-gray-700 pb-2">Capital & Fee Management</h3>
+                     <div>
+                        <label class="block mb-1 text-sm font-semibold">Set New Kernel on Investor Vault:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="newKernelAddress" type="text" placeholder="New Kernel Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600"/>
+                            <button onclick="setKernelOnInvestorVault()" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-md font-semibold">Update</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">This points the Investor Vault to the new Kernel contract.</p>
+                    </div>
                     <div>
                         <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
@@ -367,6 +375,12 @@
 
         await handleSimpleTransaction(kernelContract, 'settleLoanFromBalance', [principalInUnits, feeInUnits], "Settle Loan");
     }
+
+    async function setKernelOnInvestorVault() {
+        const newKernel = document.getElementById('newKernelAddress').value;
+        if (!ethers.isAddress(newKernel)) return showModal("Input Error", "Please enter a valid Kernel address.");
+        await handleSimpleTransaction(investorVaultContract, 'setKernel', [newKernel], "Set Kernel on Vault");
+    }
    
     async function sweepFees() {
         const amount = document.getElementById('sweepAmount').value;
@@ -601,6 +615,7 @@
     window.daoBatchClaim = daoBatchClaim;
     window.daoBatchWithdraw = daoBatchWithdraw;
     window.copyToClipboard = copyToClipboard;
+    window.setKernelOnInvestorVault = setKernelOnInvestorVault;
 
 </script>
 
