@@ -53,8 +53,7 @@
                         <label class="block mb-1 text-sm font-semibold">Repay Loan Principal to Kernel (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="repayAmount" type="number" placeholder="USDC Principal Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button id="repayAmountApproveBtn" onclick="approveRepayLoan()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                            <button id="repayAmountRepayBtn" onclick="repayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold" disabled>Repay</button>
+                            <button onclick="approveAndRepayLoan()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Repay</button>
                         </div>
                          <p class="text-xs text-gray-400 mt-1">Repay the principal loan amount.</p>
                     </div>
@@ -62,8 +61,7 @@
                         <label class="block mb-1 text-sm font-semibold">Pay Profit/Fees on Loan to Kernel (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="feeAmount" type="number" placeholder="USDC Fee Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button id="feeAmountApproveBtn" onclick="approveProcessFees()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                            <button id="feeAmountPayBtn" onclick="processFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold" disabled>Pay</button>
+                             <button onclick="approveAndProcessFees()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Pay Fees</button>
                         </div>
                          <p class="text-xs text-gray-400 mt-1">Send the profit/interest portion of a repayment.</p>
                     </div>
@@ -91,10 +89,9 @@
                         <label class="block mb-1 text-sm font-semibold">Deposit USDC to Investor Vault:</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="depositAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600 focus:ring-orange-500 focus:border-orange-500" />
-                            <button id="depositAmountApproveBtn" onclick="approveDeposit()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold whitespace-nowrap">Approve</button>
-                            <button id="depositAmountDepositBtn" onclick="deposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold" disabled>Deposit</button>
+                            <button onclick="approveAndDeposit()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Deposit</button>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">First approve, then deposit.</p>
+                        <p class="text-xs text-gray-400 mt-1">Approves and deposits in a single flow.</p>
                     </div>
                     <div class="flex flex-wrap justify-around gap-3 mt-3">
                         <button onclick="claimYield()" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md font-semibold flex-grow">Claim Yield</button>
@@ -130,8 +127,7 @@
                         <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
-                            <button id="kernelAmountApproveBtn" onclick="approveFundKernel()" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-md font-semibold">Approve</button>
-                            <button id="kernelAmountFundBtn" onclick="fundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold" disabled>Fund</button>
+                            <button onclick="approveAndFundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Fund</button>
                         </div>
                         <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel.</p>
                     </div>
@@ -321,30 +317,40 @@
     }
 
     // --- User Actions ---
-    async function approveDeposit() {
-        await handleApproval('depositAmount', 'depositAmountApproveBtn', 'depositAmountDepositBtn', addresses.investorVault);
+    async function approveAndDeposit() {
+        await handleApprovalAndTransaction(
+            'depositAmount',
+            addresses.investorVault,
+            "Deposit",
+            investorVaultContract,
+            'deposit'
+        );
     }
-    async function deposit() {
-        await handleTransaction(investorVaultContract, 'deposit', [ethers.parseUnits(document.getElementById('depositAmount').value || '0', 6)], "Deposit", 'depositAmount', 'depositAmountApproveBtn', 'depositAmountDepositBtn');
-    }
+    
     async function claimYield() {
         await handleTransaction(investorVaultContract, 'claimYield', [], "Claim Yield");
     }
+
     async function compoundYield() {
         await handleTransaction(investorVaultContract, 'compoundYield', [], "Compound Yield");
     }
+
     async function withdraw() {
         if (shareAmount === 0n) return showModal("Withdraw Error", "You have no shares to withdraw.");
         await handleTransaction(investorVaultContract, 'withdraw', [shareAmount], "Withdraw All");
     }
 
     // --- DAO & Solver Actions ---
-    async function approveFundKernel() {
-        await handleApproval('kernelAmount', 'kernelAmountApproveBtn', 'kernelAmountFundBtn', addresses.kernel);
+    async function approveAndFundKernel() {
+         await handleApprovalAndTransaction(
+            'kernelAmount',
+            addresses.kernel,
+            "Fund Kernel",
+            kernelContract,
+            'depositCapital'
+        );
     }
-    async function fundKernel() {
-        await handleTransaction(kernelContract, 'depositCapital', [ethers.parseUnits(document.getElementById('kernelAmount').value || '0', 6)], "Fund Kernel from Wallet", 'kernelAmount', 'kernelAmountApproveBtn', 'kernelAmountFundBtn');
-    }
+
     async function setPerformanceFee() {
         const feeBps = document.getElementById('performanceFeeBps').value;
         if (!feeBps || isNaN(feeBps) || feeBps < 0 || feeBps > 10000) {
@@ -352,18 +358,27 @@
         }
         await handleTransaction(kernelContract, 'setPerformanceFee', [BigInt(feeBps)], "Set Performance Fee");
     }
-    async function approveRepayLoan() {
-        await handleApproval('repayAmount', 'repayAmountApproveBtn', 'repayAmountRepayBtn', addresses.kernel);
+
+    async function approveAndRepayLoan() {
+        await handleApprovalAndTransaction(
+            'repayAmount',
+            addresses.kernel,
+            "Repay Loan",
+            kernelContract,
+            'recordLoanPrincipalRepayment'
+        );
     }
-    async function repayLoan() {
-        await handleTransaction(kernelContract, 'recordLoanPrincipalRepayment', [ethers.parseUnits(document.getElementById('repayAmount').value || '0', 6)], "Repay Loan", 'repayAmount', 'repayAmountApproveBtn', 'repayAmountRepayBtn');
+   
+    async function approveAndProcessFees() {
+        await handleApprovalAndTransaction(
+            'feeAmount',
+            addresses.kernel,
+            "Process Fees",
+            kernelContract,
+            'processSolverFees'
+        );
     }
-    async function approveProcessFees() {
-        await handleApproval('feeAmount', 'feeAmountApproveBtn', 'feeAmountPayBtn', addresses.kernel);
-    }
-    async function processFees() {
-        await handleTransaction(kernelContract, 'processSolverFees', [ethers.parseUnits(document.getElementById('feeAmount').value || '0', 6)], "Process Fees", 'feeAmount', 'feeAmountApproveBtn', 'feeAmountPayBtn');
-    }
+
     async function sweepFees() {
         const amount = document.getElementById('sweepAmount').value;
         if (amount && Number(amount) > 0) {
@@ -372,16 +387,19 @@
             await handleTransaction(yieldVaultContract, 'sweepFullBalanceToTreasury', [], "Sweep Full Balance");
         }
     }
+
     async function addSolver() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
         await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, true], "Add Solver");
     }
+
     async function removeSolver() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
         await handleTransaction(kernelContract, 'setSolverAddress', [solverAddress, false], "Remove Solver");
     }
+
     async function checkSolverStatus() {
         const solverAddress = document.getElementById('solverAddress').value;
         if (!ethers.isAddress(solverAddress)) return showModal("Input Error", "Please enter a valid Ethereum address.");
@@ -498,36 +516,39 @@
     }
 
     // --- Generic Handlers ---
-    async function handleApproval(inputId, approveBtnId, actionBtnId, spender) {
+    async function handleApprovalAndTransaction(inputId, spender, name, contractInstance, method) {
         const input = document.getElementById(inputId);
-        const approveBtn = document.getElementById(approveBtnId);
-        const actionBtn = document.getElementById(actionBtnId);
-        
         const amount = input.value;
-        if (!amount || isNaN(amount) || Number(amount) <= 0) return showModal("Input Error", "Please enter a valid amount to approve.");
+        if (!amount || isNaN(amount) || Number(amount) <= 0) return showModal("Input Error", "Please enter a valid amount.");
         
-        showModal("Processing", "Requesting approval from your wallet...");
-        
-        approveBtn.disabled = true;
-        actionBtn.disabled = true;
+        const amountInUnits = ethers.parseUnits(amount, 6);
 
         try {
-            const tx = await usdcContract.approve(spender, ethers.parseUnits(amount, 6));
+            // --- Approval Step ---
+            showModal("Processing (Step 1/2)", `Requesting approval for ${amount} USDC...`);
+            const approveTx = await usdcContract.approve(spender, amountInUnits);
+            await approveTx.wait();
+            showModal("Success (Step 1/2)", `Successfully approved ${amount} USDC. Now processing transaction...`);
+
+            // --- Transaction Step ---
+            const tx = await contractInstance[method](amountInUnits);
             await tx.wait();
-            showModal("Success", `Successfully approved ${amount} USDC.`);
+            showModal("Success (Step 2/2)", `${name} transaction was successful!`);
             
-            input.disabled = true;
-            actionBtn.disabled = false; // Enable the action button
+            // --- Refresh Data ---
+            fetchUserData();
+            if (isSolver) fetchSolverData();
+            if (!document.getElementById('daoTools').classList.contains('hidden')) fetchAllDaoData();
 
         } catch (error) {
-            console.error("Approval failed:", error);
-            showModal("Error", `Approval failed: ${error?.reason || error.message}`);
-            // Re-enable buttons on failure
-            approveBtn.disabled = false;
+            console.error(`${name} failed:`, error);
+            showModal("Error", `${name} failed: ${error?.reason || error.data?.message || error.message}`);
+        } finally {
+            input.value = ''; // Reset input field
         }
     }
 
-    async function handleTransaction(contractInstance, method, args = [], name, inputId, approveBtnId, actionBtnId) {
+    async function handleTransaction(contractInstance, method, args = [], name) {
         showModal("Processing", `Sending ${name} transaction... Please confirm in your wallet.`);
         try {
             const tx = await contractInstance[method](...args);
@@ -544,15 +565,7 @@
             }
         } catch (error) {
             console.error(`${name} failed:`, error);
-            showModal("Error", `${name} failed: ${error?.reason || error.message}`);
-        } finally {
-             // Reset UI elements if they were part of the transaction
-            if(inputId && approveBtnId && actionBtnId) {
-                document.getElementById(inputId).disabled = false;
-                document.getElementById(inputId).value = '';
-                document.getElementById(approveBtnId).disabled = false;
-                document.getElementById(actionBtnId).disabled = true;
-            }
+            showModal("Error", `${name} failed: ${error?.reason || error.data?.message || error.message}`);
         }
     }
     
@@ -576,17 +589,13 @@
     
     // --- Expose functions to global scope for HTML onclick handlers ---
     window.connectWallet = connectWallet;
-    window.approveDeposit = approveDeposit;
-    window.deposit = deposit;
+    window.approveAndDeposit = approveAndDeposit;
     window.claimYield = claimYield;
     window.compoundYield = compoundYield;
     window.withdraw = withdraw;
-    window.approveFundKernel = approveFundKernel;
-    window.fundKernel = fundKernel;
-    window.approveRepayLoan = approveRepayLoan;
-    window.repayLoan = repayLoan;
-    window.approveProcessFees = approveProcessFees;
-    window.processFees = processFees;
+    window.approveAndFundKernel = approveAndFundKernel;
+    window.approveAndRepayLoan = approveAndRepayLoan;
+    window.approveAndProcessFees = approveAndProcessFees;
     window.sweepFees = sweepFees;
     window.setPerformanceFee = setPerformanceFee;
     window.addSolver = addSolver;
