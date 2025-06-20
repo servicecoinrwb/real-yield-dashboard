@@ -145,7 +145,7 @@
                             <button onclick="deployFromVault()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Deploy Capital</button>
                         </div>
                     </div>
-                    <div>
+                     <div>
                         <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
@@ -154,12 +154,36 @@
                         <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel.</p>
                     </div>
                      <div>
+                        <label class="block mb-1 text-sm font-semibold">Propose New Investor Vault Address:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="proposeInvestorVault" type="text" placeholder="New Investor Vault Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600"/>
+                            <button onclick="proposeNewInvestorVault()" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-md font-semibold">Propose</button>
+                        </div>
+                         <button onclick="finalizeInvestorVaultChange()" class="mt-1 text-xs text-orange-400 hover:underline">Finalize Investor Vault Change (after 48hr timelock)</button>
+                    </div>
+                     <div>
+                        <label class="block mb-1 text-sm font-semibold">Propose New Yield Vault Address:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="proposeYieldVault" type="text" placeholder="New Yield Vault Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600"/>
+                            <button onclick="proposeNewYieldVault()" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-md font-semibold">Propose</button>
+                        </div>
+                         <button onclick="finalizeYieldVaultChange()" class="mt-1 text-xs text-orange-400 hover:underline">Finalize Yield Vault Change (after 48hr timelock)</button>
+                    </div>
+                    <div>
                         <label class="block mb-1 text-sm font-semibold">Set DAO Performance Fee:</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="performanceFeeBps" type="number" placeholder="Fee in BPS (e.g., 2000 for 20%)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600"/>
                             <button onclick="setPerformanceFee()" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-md font-semibold">Set Fee</button>
                         </div>
                         <p class="text-xs text-gray-400 mt-1">Sets the DAO's take rate on profits.</p>
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-sm font-semibold">Sweep Fees from Yield Vault to Treasury:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                             <input id="sweepAmount" type="number" placeholder="USDC Amount (optional)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="sweepFees()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold">Sweep</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Leave amount blank to sweep the full balance.</p>
                     </div>
                 </div>
 
