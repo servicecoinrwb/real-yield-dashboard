@@ -41,6 +41,7 @@
                     <div id="solverLoanInfo" class="space-y-2 text-md">
                         <p>Outstanding Loan Principal: <span id="solverLoanPrincipal" class="font-bold text-cyan-400">...</span></p>
                     </div>
+                     <button onclick="fillRepaymentInfo()" class="mt-3 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md font-semibold w-full">Fill Repayment Info</button>
                      <p class="text-xs text-gray-400 mt-3">This section is visible because you are a whitelisted solver. Interest must be calculated off-chain.</p>
                 </div>
 
@@ -144,23 +145,15 @@
                             <button onclick="deployFromVault()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Deploy Capital</button>
                         </div>
                     </div>
-                     <div>
-                        <label class="block mb-1 text-sm font-semibold">Propose New Investor Vault Address:</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input id="proposeInvestorVault" type="text" placeholder="New Investor Vault Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600"/>
-                            <button onclick="proposeNewInvestorVault()" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-md font-semibold">Propose</button>
-                        </div>
-                         <button onclick="finalizeInvestorVaultChange()" class="mt-1 text-xs text-orange-400 hover:underline">Finalize Investor Vault Change (after 48hr timelock)</button>
-                    </div>
-                     <div>
-                        <label class="block mb-1 text-sm font-semibold">Propose New Yield Vault Address:</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input id="proposeYieldVault" type="text" placeholder="New Yield Vault Address" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600"/>
-                            <button onclick="proposeNewYieldVault()" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-md font-semibold">Propose</button>
-                        </div>
-                         <button onclick="finalizeYieldVaultChange()" class="mt-1 text-xs text-orange-400 hover:underline">Finalize Yield Vault Change (after 48hr timelock)</button>
-                    </div>
                     <div>
+                        <label class="block mb-1 text-sm font-semibold">Fund Kernel from Wallet (USDC):</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="kernelAmount" type="number" placeholder="USDC Amount" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600" />
+                            <button onclick="approveAndFundKernel()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md font-semibold w-full">Approve & Fund</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Adds capital from your wallet directly to the Kernel.</p>
+                    </div>
+                     <div>
                         <label class="block mb-1 text-sm font-semibold">Set DAO Performance Fee:</label>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <input id="performanceFeeBps" type="number" placeholder="Fee in BPS (e.g., 2000 for 20%)" class="bg-gray-700 text-white w-full p-2 rounded-md border border-gray-600"/>
@@ -490,6 +483,22 @@
         if (addresses.length === 0) return showModal("Input Error", "Please provide at least one valid address.");
         await handleSimpleTransaction(investorVaultContract, 'batchWithdraw', [addresses], "Batch Withdraw");
     }
+
+    async function fillRepaymentInfo() {
+        try {
+            const principal = await kernelContract.getLoanPrincipal(currentAddress);
+            if(principal > 0n) {
+                const principalInEther = ethers.formatUnits(principal, 6);
+                document.getElementById('settlePrincipalAmount').value = principalInEther;
+                showModal("Info", "Repayment amount has been filled in.");
+            } else {
+                showModal("Info", "No outstanding loan to repay.");
+            }
+        } catch (error) {
+            console.error("Could not fetch loan principal:", error);
+            showModal("Error", "Could not fetch loan principal.");
+        }
+    }
     
     // --- Event Handling & Logging ---
     async function setupEventListeners() {
@@ -652,6 +661,7 @@
     window.proposeNewYieldVault = proposeNewYieldVault;
     window.finalizeYieldVaultChange = finalizeYieldVaultChange;
     window.deployFromVault = deployFromVault;
+    window.fillRepaymentInfo = fillRepaymentInfo;
 
 </script>
 
