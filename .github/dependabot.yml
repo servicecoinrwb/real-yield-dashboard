@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # Enable version updates for npm (for your frontend dashboard & dev tools)
+  - package-ecosystem: "npm"
+    directory: "/" # Looks for your package.json in the root directory
+    schedule:
+      interval: "weekly"
+    # Group npm updates into a single weekly pull request
+    groups:
+      npm-dependencies:
+        pattern: "*"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/" # Looks for workflow files in .github/workflows
+    schedule:
+      interval: "weekly"
