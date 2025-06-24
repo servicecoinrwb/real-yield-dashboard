@@ -9,7 +9,7 @@ If you believe you have discovered a security vulnerability in our protocol, ple
 **We strongly prefer reports via GitHub's Private Vulnerability Reporting feature.** This ensures the report is triaged and addressed securely.
 
 1.  **Primary Method:** Navigate to the "Security" tab of our repository and click "Report a vulnerability."
-2.  **Secondary Method:** If you are unable to use the primary method, please email us at **[Please Add Your Secure Email Address Here, e.g., security@yourproject.com]**.
+2.  **Secondary Method:** If you are unable to use the primary method, please email us at **[info@service.money]**.
 
 **Please do not report vulnerabilities through public GitHub issues or other public channels.**
 
