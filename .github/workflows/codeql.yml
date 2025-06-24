@@ -29,18 +29,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # NEW STEP: Install NPM dependencies to make sure the Solidity compiler and
-    # other tools are available for the analysis.
-    - name: Install dependencies
-      run: npm install
-
     # Initializes the CodeQL tools for scanning
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
 
-    # The Autobuild step attempts to build any compiled languages
+    # The Autobuild step will attempt to automatically build and analyze the code
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
 
