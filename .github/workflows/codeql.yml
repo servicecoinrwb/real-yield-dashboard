@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '30 10 * * 1' # Runs at 10:30 UTC on Mondays
+    - cron: '30 10 * * 1'
 
 jobs:
   # JavaScript Analysis Job
@@ -17,19 +17,15 @@ jobs:
       actions: read
       contents: read
       security-events: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: javascript
-
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
-
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
@@ -43,19 +39,19 @@ jobs:
       actions: read
       contents: read
       security-events: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: solidity
+          # This new line explicitly loads the Solidity query pack
+          queries: +security-extended,github/codeql-solidity/queries@main
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
-
+        
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
