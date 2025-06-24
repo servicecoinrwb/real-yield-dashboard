@@ -29,6 +29,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # NEW STEP: Install NPM dependencies to make sure the Solidity compiler and
+    # other tools are available for the analysis.
+    - name: Install dependencies
+      run: npm install
+
     # Initializes the CodeQL tools for scanning
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -39,7 +44,7 @@ jobs:
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
 
-    # Corrected Step: Use 'analyze' instead of 'perform'
+    # Perform the analysis
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
