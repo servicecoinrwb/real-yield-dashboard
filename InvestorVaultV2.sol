@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at Arbiscan.io on 2025-06-02
-*/
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -16,11 +12,13 @@ interface IERC20 {
 
 library SafeERC20 {
     function safeTransfer(IERC20 token, address to, uint256 value) internal {
-        require(token.transfer(to, value), "SafeERC20: transfer failed");
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(token.transfer.selector, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transfer failed");
     }
 
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
-        require(token.transferFrom(from, to, value), "SafeERC20: transferFrom failed");
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transferFrom failed");
     }
 }
 
@@ -97,7 +95,12 @@ contract InvestorVaultV2 is Ownable {
         require(amount > 0, "Zero deposit");
         usdc.safeTransferFrom(msg.sender, address(this), amount);
 
-        uint256 sharesToMint = totalShares == 0 ? amount : (amount * totalShares) / totalDeposits;
+        uint256 sharesToMint;
+        if (totalDeposits == 0 || totalShares == 0) {
+            sharesToMint = amount;
+        } else {
+            sharesToMint = (amount * totalShares) / totalDeposits;
+        }
 
         shares[msg.sender] += sharesToMint;
         totalShares += sharesToMint;
@@ -143,10 +146,25 @@ contract InvestorVaultV2 is Ownable {
         totalYieldDistributed += amount;
     }
 
+    // --- THIS FUNCTION IS NOW FIXED ---
     function claimableYield(address investor) public view returns (uint256) {
+        if (totalShares == 0) {
+            return 0;
+        }
         uint256 totalEarned = (shares[investor] * totalDeposits) / totalShares;
         uint256 totalInitial = (shares[investor] * (totalDeposits - totalYieldDistributed)) / totalShares;
-        return totalEarned > totalInitial ? totalEarned - totalInitial - claimedYield[investor] : 0;
+
+        if (totalEarned <= totalInitial) {
+            return 0; // No yield has been generated
+        }
+
+        uint256 grossYield = totalEarned - totalInitial;
+
+        if (grossYield <= claimedYield[investor]) {
+            return 0; // Already claimed all pending yield
+        }
+
+        return grossYield - claimedYield[investor];
     }
 
     function claimYield() external {
